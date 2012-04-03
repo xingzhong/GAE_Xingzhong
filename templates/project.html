@@ -1,5 +1,26 @@
 <html>
-<head> 
+<head>
+	<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+	<script type="text/javascript">
+		google.load("visualization", "1", {packages:["corechart"]});
+		google.setOnLoadCallback(drawChart);
+		function drawChart() {
+			var data = new google.visualization.DataTable();
+			data.addColumn('datetime', 'Time');
+			data.addColumn('number', 'Model-VIX');
+			data.addColumn('number', 'Real-VIX');
+			data.addRows([
+				{% for vix in vixs %}
+					[new Date({{vix.marketTime.year}},{{vix.marketTime.month}},{{vix.marketTime.day}},{{vix.marketTime.hour}},{{vix.marketTime.minute}},{{vix.marketTime.second}}), {{vix.quoteModel}}, {{vix.quoteReal}}],
+				{% endfor %}
+				]);
+			var options = { 
+				title: 'VIX'
+			};
+			var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+			chart.draw(data, options);
+	      }
+	</script> 
 	<link href='http://fonts.googleapis.com/css?family=Berkshire+Swash|Averia+Libre:300,400' rel='stylesheet' type='text/css'>
 	<style type='text/css'> 
 		h1 { font-family: 'Berkshire Swash', cursive; font-weight: 400; font-size:300% }
@@ -83,6 +104,8 @@
 		</tr>
 	</table></center>
 	</div><hr>
+	<h2>  Performance </h2> 
+		<div id="chart_div" style="width: 900px; height: 500px;"></div> <hr>
 	<h2> Appendix </h2> <div class = 't'>
 		The following near and next term S&P 500 option chains are selected for calculate the vix index. The gray line is the at the money strike.
 		Option chain end at {{near}}

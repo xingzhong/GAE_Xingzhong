@@ -44,23 +44,8 @@ class MainHandler(webapp2.RequestHandler):
         self.response.out.write(myreplace.replace ( template.render(template_values)))
 
 class OptionHandler(webapp2.RequestHandler):
-    def get(self):        
-        #add memcache to store 
-        #template_values = { 'chain' : chain, 'K':k }
-        #template = jinja_environment.get_template('option.html')
-        #self.response.out.write(template.render(template_values))
-        #start = datetime.datetime.now()
-        #r4, r13 = myutils.riskFree()
-        #maturity = myutils.maturity(datetime.datetime.now())
-        #t1 = myutils.toT(maturity[0] - datetime.datetime.now())
-        #t2 = myutils.toT(maturity[1] - datetime.datetime.now())
-        #chain1,f1, k1, sigma1, yaTime = myutils.optionChain('^GSPC', maturity[0], t1, r4)
-        #end = datetime.datetime.now() - start
-        #chain2,f2, k2, sigma2, yaTime = myutils.optionChain('^GSPC', maturity[1], t2, r13)
-        #sigma = myutils.average(sigma1, maturity[0],t1, sigma2, maturity[1],t2)
-        #vixQuote, vixTime = myutils.vix()
-        #end = datetime.datetime.now() - start
-        #vixs = db.GqlQuery(" select * from vix ORDER BY gaeTime DESC LIMIT 1" )[0]
+    def get(self):
+        vixs = db.GqlQuery(" select * from vix ORDER BY marketTime DESC LIMIT 100" )
         template_values = {
             'author':'Deployed @ Google App Engine', 
             'time':datetime.datetime.now(GMT5()).strftime("%Y-%b-%d %H:%M:%S"),
@@ -82,6 +67,7 @@ class OptionHandler(webapp2.RequestHandler):
             'loadTime' : memcache.get("costT"),
             'vixQuote' : memcache.get("quoteReal"),
             'yaTime' : memcache.get("yaTime"),
+            'vixs': vixs,
             }
         template = jinja_environment.get_template('project.html')
         self.response.out.write(myreplace.replace ( template.render(template_values)))
