@@ -67,7 +67,7 @@
 			</tr>
 		</table></center>
 	Then the near term result is {{sigma1}}, and the next term result is {{sigma2}}.<br>
-	Our VIX Model result is {{sigma}} @ {{yaTime}}.<br>
+	Our VIX Model result is {{quoteModel}} @ {{yaTime}}.<br>
 	The real VIX result is {{vixQuote}} @ {{vixTime}}. <br>
 	GAE Consume Time : {{loadTime}}s.
 	<center><table> 
@@ -75,16 +75,16 @@
 			<th>   </th> <th> Index </th> <th> Time </th>
 		</tr>
 		<tr>
-			<td> My Model </td> <td> {{sigma}} </td> <td> {{yaTime}} </td> 
+			<td> My Model </td> <td> {{quoteModel}} </td> <td> {{yaTime}} </td> 
 		</tr>
 		<tr>
-			<td> Real Data </td> <td> {{vixQuote}} </td> <td> {{vixTime}} </td> 
+			<td> Real Data </td> <td> {{vixQuote}} </td> <td> {{yaTime}} </td> 
 		</tr>
 	</table></center>
 	</div><hr>
 	<h2> Appendix </h2> <div class = 't'>
 		The following near and next term S&P 500 option chains are selected for calculate the vix index. The gray line is the at the money strike.
-		Option chain end at {{year}} - {{month1}} - {{day1}}
+		Option chain end at {{near}}
 		<center><table>
 			<tr> 
 				<th> Strike </th> <th> Call Bid </th> <th> Call Ask </th> <th> Put Bid </th> <th> Put Ask </th> <th> Contribution </th>
@@ -104,7 +104,7 @@
 			<tr>
 			{% endfor %}
 		</table></center>
-		Option chain end at {{year}} - {{month2}} - {{day2}}
+		Option chain end at {{next}}
 		<center><table>
 			<tr> 
 				<th> Strike </th> <th> Call Bid </th> <th> Call Ask </th> <th> Put Bid </th> <th> Put Ask </th> <th> Contribution </th>

@@ -2,6 +2,7 @@ import webapp2
 import sys
 import os
 import webapp2
+from google.appengine.api import memcache
 import jinja2
 import datetime
 import replace as myreplace
@@ -58,29 +59,28 @@ class OptionHandler(webapp2.RequestHandler):
         #sigma = myutils.average(sigma1, maturity[0],t1, sigma2, maturity[1],t2)
         #vixQuote, vixTime = myutils.vix()
         #end = datetime.datetime.now() - start
-        vixs = db.GqlQuery(" select * from vix ORDER BY gaeTime DESC LIMIT 1" )[0]
+        #vixs = db.GqlQuery(" select * from vix ORDER BY gaeTime DESC LIMIT 1" )[0]
         template_values = {
             'author':'Deployed @ Google App Engine', 
             'time':datetime.datetime.now(GMT5()).strftime("%Y-%b-%d %H:%M:%S"),
-            'r4': vixs.riskNear,
-            'r13': vixs.riskNext,
-            #'near': vix.maturity[0].strftime("%Y-%b-%d %H:%M:%S"),
-            #'next': vix.maturity[1].strftime("%Y-%b-%d %H:%M:%S"),
-            #'chain1' : chain1,
-            #'chain2' : chain2,
-            #'k1' : vix.atMoney[0], 
-            #'k2' : vix.atMoney[1], 
-            'T1' : vixs.nearTerm,
-            'T2' : vixs.nextTerm,
-            #'f1' : f1,
-            #'f2' : f2,
-            #'sigma1' : vix.sigma[0],
-            #'sigma2' : vix.sigma[1],
-            'sigma' : vixs.quoteModel,
-            'loadTime' : vixs.timeCost,
-            'vixQuote' : vixs.quoteReal,
-            #'vixTime' : vixTime,
-            'yaTime' : vixs.marketTime,
+            'r4': memcache.get("r4"),
+            'r13': memcache.get("r13"),
+            'near': memcache.get("maturity")[0].strftime("%Y-%b-%d %H:%M:%S"),
+            'next': memcache.get("maturity")[1].strftime("%Y-%b-%d %H:%M:%S"),
+            'chain1' : memcache.get("chain1"),
+            'chain2' : memcache.get("chain2"),
+            'k1' : memcache.get("k1"), 
+            'k2' : memcache.get("k2"), 
+            'T1' : memcache.get("nearTerm"),
+            'T2' : memcache.get("nextTerm"),
+            'f1' : memcache.get("f1"),
+            'f2' : memcache.get("f2"),
+            'sigma1' : memcache.get("sigma1"),
+            'sigma2' : memcache.get("sigma2"),
+            'quoteModel' : memcache.get("quoteModel"),
+            'loadTime' : memcache.get("costT"),
+            'vixQuote' : memcache.get("quoteReal"),
+            'yaTime' : memcache.get("yaTime"),
             }
         template = jinja_environment.get_template('project.html')
         self.response.out.write(myreplace.replace ( template.render(template_values)))
@@ -101,8 +101,26 @@ class JobHandler(webapp2.RequestHandler):
         quoteModel = myutils.average(sigma1, maturity[0], nearTerm, 
                 sigma2, maturity[1],nextTerm)
         costT = (datetime.datetime.now() - start).total_seconds()
+        memcache.set_multi({
+            "chain1" : chain1,
+            "chain2" : chain2,
+            "maturity": maturity,
+            "nearTerm" : nearTerm,
+            "nextTerm" : nextTerm,
+            "r4": r4,
+            "r13" : r13,
+            "quoteReal" : quoteReal,
+            "f1" : f1,
+            "f2" : f2,
+            "k1" : k1,
+            "k2" : k2,
+            "sigma1": sigma1,
+            "sigma2": sigma2,
+            "quoteModel": quoteModel,
+            "costT" : costT,
+            "yaTime" : vixTime })
         data = vix(
-            marketTime = yaTime,
+            marketTime = vixTime,
             quoteModel = quoteModel,
             quoteReal = quoteReal,
             timeCost = costT,
