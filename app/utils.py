@@ -27,9 +27,12 @@ def logical_test(x, y):
     else:
         return np.nan
 
-def optionChain(sym, year, month, day, time, rate):
+def optionChain(sym, maturity, time, rate):
     """ return yahoo option chain given year and month """
     #print "Downloading Data ... "
+    year = maturity.strftime("%Y")
+    month = maturity.strftime("%m")
+    day = maturity.strftime("%d")
     url = "http://finance.yahoo.com/q/op?s=%s&m=%s-%s-%s"%(sym,year,month,day)
     f = urllib.urlopen(url)
     tree = etree.HTML(f.read())
@@ -119,7 +122,7 @@ def optionChain(sym, year, month, day, time, rate):
     
     sigma = 2 / time * np.sum(chain['price']) - 1/time * (F/k -1)**2
         
-    return chain, F, k, sigma, yaTime
+    return chain, F, float(k), float(sigma), yaTime
 
 def dictSort(x):
     """Sort a dict by value"""
@@ -176,7 +179,7 @@ def average(s1, t1, dt1, s2, t2, dt2):
     Nt2 = (t2-now).total_seconds() / 60
     N30 = 43200
     N365 = 525600
-    return 100 * np.sqrt( N365/N30*( dt1*s1*(Nt2-N30)/(Nt2-Nt1) + dt2*s2*(N30-Nt1)/(Nt2-Nt1) ))
+    return float(100 * np.sqrt( N365/N30*( dt1*s1*(Nt2-N30)/(Nt2-Nt1) + dt2*s2*(N30-Nt1)/(Nt2-Nt1) )))
 
 def vix():
     url = "http://finance.yahoo.com/q/op?s=^vix"
