@@ -1,0 +1,6 @@
+cron:
+
+- description: option chain loading job on market hours
+  url: /job
+  schedule: every 30 minutes from 9:30 to 4:30
+  timezone: America/Resolute

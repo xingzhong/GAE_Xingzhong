@@ -8,6 +8,7 @@ import datetime
 import replace as myreplace
 import utils as myutils
 from models import *
+import logging
 
 
 class GMT5(datetime.tzinfo):
@@ -89,6 +90,10 @@ class JobHandler(webapp2.RequestHandler):
     def get(self):
         #add memcache to store 
         start = datetime.datetime.now()
+        if start.weekday() in [6,7]:
+            logging.info("Not workday, just return")
+            return None
+        logging.info("Workday, continue")
         quoteReal, vixTime = myutils.vix()
         maturity = myutils.maturity(start)
         r4, r13 = myutils.riskFree()
@@ -130,5 +135,5 @@ class JobHandler(webapp2.RequestHandler):
             nextTerm =  nextTerm
             )
         data.put()
-        self.redirect('/options')
+        
     
