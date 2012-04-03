@@ -1,0 +1,23 @@
+<html>
+<head> </head>
+<body>
+	target price : {{K}}
+	<table>
+		<tr> 
+			<th> Strike</th>
+			<th> Quote </th>
+		</tr>
+	{%  for c in chain %}
+		<tr>
+			{% if c['strk'] == K %}
+				<td><b> {{c['strk']}} </b></td>
+				<td><b> {{c['price']}} </b></td>
+			{% else %}
+				<td> {{c['strk']}} </td>
+				<td> {{c['price']}} </td>
+			{% endif %}
+		</tr>
+	{% endfor %}
+	</table>
+</body>
+</html>

@@ -1,0 +1,148 @@
+<html>
+<head> 
+	<link href='http://fonts.googleapis.com/css?family=Berkshire+Swash|Averia+Libre:300,400' rel='stylesheet' type='text/css'>
+	<style type='text/css'> 
+		h1 { font-family: 'Berkshire Swash', cursive; font-weight: 400; font-size:300% }
+		h2 { font-family: 'Berkshire Swash', cursive; font-weight: 400; font-size:205% }
+		hr { border: 0; width: 80%; right: 10%;
+			 background-color: #a32638; height: 4px; position:relative}
+		div.t {margin:1% 20% 1% 5%; font-family: 'Averia Libre', cursive; font-weight: 400; font-size: 105%}
+		footer { text-align:center;}
+		table,td,th {border:1px solid black;}
+	</style> 
+	<script src="//platform.linkedin.com/in.js" type="text/javascript"></script>
+	<script src="http://latex.codecogs.com/latexit.js" type="text/javascript"></script>
+	<title> Project </title>
+</head>
+<body>
+	<h1> VIX Model </h1> 
+	<hr> <div class = 't'> 
+		<div style="text-align:right;">alpha version: 0.1 <br> 
+			Next Version ----- <br>
+			1. datastore to save the result <br>
+			2. cron support <br> 
+		</div>
+	</div><hr>
+	<div class = 't'>
+	VIX is the ticker symbol for the Chicago Board Options Exchange Market Volatility Index, a popular measure of the implied volatility of S&P 500 index options. It represents one measure of the market's expectation of stock market volatility over the next 30 day period. <br>
+	In this project, I am looking forwards to track the index by myself, and see if there's any potential arbitrage opportunities inside of it. <br>
+	The VIX quantitative model is based on the near and next term S&P 500 index monthly options. <br><br>
+		<center>
+		<div lang="latex">
+			\sigma^2 = \frac{2}{T} \sum_{i} \frac{\Delta K_i}{K_i^2}\exp(RT)Q(K_i) - \frac{1}{T}(\frac{F}{K_0}-1)^2
+		</div>
+		</center>
+	</div>
+	<hr>
+	<h2> Risk-free Rate & Time to Maturity </h2><div class = 't'>
+	First we obtain the risk free rate from <a href="http://www.treasury.gov/resource-center/data-chart-center/interest-rates/Datasets/daily_treas_bill_rates.xml"> here </a>. <br>
+	The current time is {{time}}, <br>
+	The 4 weeks T-Bill return is {{r4}} and the 13 weeks one is {{r13}}. <br> 
+	Next we calculate the time to maturity for the near and next term S&P 500 options. <br>
+	The near term maturity date is {{near}}; and the next term maturity date is {{next}}.
+	<center><table> 
+		<tr>
+			<th>  </th> <th> near </th> <th> next </th>
+		</tr>
+		<tr>
+			<td> Normalized Time </td> <td> {{T1}} </td> <td> {{T2}} </td> 
+		</tr>
+		<tr>
+			<td> Risk-free Rate </td> <td> {{r4}} </td> <td> {{r13}} </td> 
+		</tr>
+	</table></center>
+	</div><hr>
+	<h2> Option Chain </h2><div class = 't'>
+		We obtain the S&P500 option chain through <a href="http://finance.yahoo.com/q/op?s=^gspc"> yahoo finance </a>. <br>
+		We select the at-the-money strike price <span lang="latex">K_0</span> which have least small call and put price absolute difference. The calculate each contributions for different strikes.<br>
+		<center><table> 
+			<tr>
+				<th> Parameters  </th> <th> near </th> <th> next </th>
+			</tr>
+			<tr>
+				<td> F </td> <td> {{f1}} </td> <td> {{f2}} </td> 
+			</tr>
+			<tr>
+				<td> K0 </td> <td> {{k1}} </td> <td> {{k2}} </td> 
+			</tr>
+		</table></center>
+	Then the near term result is {{sigma1}}, and the next term result is {{sigma2}}.<br>
+	Our VIX Model result is {{sigma}} @ {{yaTime}}.<br>
+	The real VIX result is {{vixQuote}} @ {{vixTime}}. <br>
+	GAE Consume Time : {{loadTime}}s.
+	<center><table> 
+		<tr>
+			<th>   </th> <th> Index </th> <th> Time </th>
+		</tr>
+		<tr>
+			<td> My Model </td> <td> {{sigma}} </td> <td> {{yaTime}} </td> 
+		</tr>
+		<tr>
+			<td> Real Data </td> <td> {{vixQuote}} </td> <td> {{vixTime}} </td> 
+		</tr>
+	</table></center>
+	</div><hr>
+	<h2> Appendix </h2> <div class = 't'>
+		The following near and next term S&P 500 option chains are selected for calculate the vix index. The gray line is the at the money strike.
+		Option chain end at {{year}} - {{month1}} - {{day1}}
+		<center><table>
+			<tr> 
+				<th> Strike </th> <th> Call Bid </th> <th> Call Ask </th> <th> Put Bid </th> <th> Put Ask </th> <th> Contribution </th>
+			</tr>
+			{% for c in chain1 %}
+			{% if c['strk'] == k1 %}
+				<tr bgcolor="gray">
+			{% else %}	
+				<tr>
+			{% endif %}
+				<td> {{c['strk']}} </td>
+				<td> {{c['callBid']}} </td>
+				<td> {{c['callAsk']}} </td>
+				<td> {{c['putBid']}} </td>
+				<td> {{c['putAsk']}} </td>
+				<td> {{c['price']}} </td>
+			<tr>
+			{% endfor %}
+		</table></center>
+		Option chain end at {{year}} - {{month2}} - {{day2}}
+		<center><table>
+			<tr> 
+				<th> Strike </th> <th> Call Bid </th> <th> Call Ask </th> <th> Put Bid </th> <th> Put Ask </th> <th> Contribution </th>
+			</tr>
+			{% for c in chain2 %}
+			{% if c['strk'] == k2 %}
+				<tr bgcolor="gray">
+			{% else %}	
+				<tr>
+			{% endif %}
+				<td> {{c['strk']}} </td>
+				<td> {{c['callBid']}} </td>
+				<td> {{c['callAsk']}} </td>
+				<td> {{c['putBid']}} </td>
+				<td> {{c['putAsk']}} </td>
+				<td> {{c['price']}} </td>
+			<tr>
+			{% endfor %}
+		</table></center>
+	</div>
+	<hr>
+<footer>
+		<script type="IN/MemberProfile" data-id="http://www.linkedin.com/in/xingzhongxu" data-format="hover" data-related="false"></script>
+		<a href="https://twitter.com/xxingzhong" class="twitter-follow-button" data-show-count="false">Follow @xxingzhong</a>
+		<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>		
+		<!-- Place this tag where you want the +1 button to render -->
+		<div class="g-plusone"></div>
+
+		<!-- Place this render call where appropriate -->
+		<script type="text/javascript">
+		  (function() {
+		    var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
+		    po.src = 'https://apis.google.com/js/plusone.js';
+		    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
+		  })();
+		</script>
+		<a href="https://github.com/xingzhong"> <img src="http://helloburin.com/misc/github_32.png"/></a> 
+		<br> Xingzhong <br> {{author}} <br> Server Time: {{time}} 
+	</footer>
+</body>
+</html>
