@@ -45,14 +45,24 @@ class MainHandler(webapp2.RequestHandler):
 
 class OptionHandler(webapp2.RequestHandler):
     def get(self):
-        vixs = db.GqlQuery(" select * from vix ORDER BY marketTime DESC LIMIT 100" )
+        vixs = memcache.get("vixs")
+        if vixs is None:
+            vixs = db.GqlQuery(" select * from vix ORDER BY marketTime DESC LIMIT 100" )
+            if not memcache.add("vixs", vixs, 10):
+                logging.error("vixs memcache set failed")
+        maturity = memcache.get("maturity")
+        near = None
+        next = None
+        if maturity:
+            near = maturity[0].strftime("%Y-%b-%d %H:%M:%S")
+            next = maturity[1].strftime("%Y-%b-%d %H:%M:%S")
         template_values = {
             'author':'Deployed @ Google App Engine', 
             'time':datetime.datetime.now(GMT5()).strftime("%Y-%b-%d %H:%M:%S"),
             'r4': memcache.get("r4"),
             'r13': memcache.get("r13"),
-            'near': memcache.get("maturity")[0].strftime("%Y-%b-%d %H:%M:%S"),
-            'next': memcache.get("maturity")[1].strftime("%Y-%b-%d %H:%M:%S"),
+            'near': near,
+            'next': next,
             'chain1' : memcache.get("chain1"),
             'chain2' : memcache.get("chain2"),
             'k1' : memcache.get("k1"), 
