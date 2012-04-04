@@ -7,5 +7,6 @@ from app.views import *
 app = webapp2.WSGIApplication([
     ('/', MainHandler), 
     ('/options', OptionHandler),
-    ('/job', JobHandler)
+    ('/job', JobHandler),
+    ('/tk', TKHandler)
     ], debug=True)

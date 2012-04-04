@@ -132,4 +132,7 @@ class JobHandler(webapp2.RequestHandler):
             )
         data.put()
         
-    
+class TKHandler(webapp2.RequestHandler):   
+    def get(self):
+        output = myutils.fromTK('spx',None,None,0.08)
+        self.response.out.write(output)

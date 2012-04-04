@@ -6,6 +6,7 @@ import numpy as np
 from sets import Set
 import datetime
 import calendar
+import tradeking as tk
 
 YEARSECS = 525600*60
 
@@ -27,8 +28,19 @@ def logical_test(x, y):
     else:
         return np.nan
 
+
+def fromTK(sym, maturity, time, rate):
+    """ return tradeking option chain given maturity """
+    t = tk.TK()
+    res = t.quote('spx,aapl')
+    return res
+
 def optionChain(sym, maturity, time, rate):
-    """ return yahoo option chain given year and month """
+    call, put = fromYahoo(sym, maturity, time, rate)
+    return calculate(call, put, sym, maturity, time, rate)
+    
+def fromYahoo(sym, maturity, time, rate):
+    """ return yahoo option chain given maturity """
     #print "Downloading Data ... "
     year = maturity.strftime("%Y")
     month = maturity.strftime("%m")
@@ -61,6 +73,8 @@ def optionChain(sym, maturity, time, rate):
         counter = counter + 1
 
     #print "Finish Parsing"
+
+def calculate(call, put, sym, maturity, time, rate):
     keys = Set(call.keys() + put.keys())
     Nones = ( np.nan, np.nan, np.nan, np.nan)
             
