@@ -2,5 +2,5 @@ cron:
 
 - description: option chain loading job on market hours
   url: /job
-  schedule: every 15 minutes from 9:30 to 16:30
+  schedule: every 5 minutes from 9:31 to 16:35
   timezone: America/New_York

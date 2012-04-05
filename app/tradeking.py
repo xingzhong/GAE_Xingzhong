@@ -25,8 +25,8 @@ class TK:
         headers = {}
         req = self.client.make_request(url=url, 
             token=self.OAUTH_TOKEN, secret = self.OAUTH_TOKEN_SECRET,
-            additional_params=params, method=method, headers=headers,
-            protected = True)
+            additional_params=params, method=method, headers=headers,)
+            #protected = True)
         #logging.info("[headers] %s"%req.headers)
         #logging.info("[final_url] %s"%req.final_url)
         #logging.info("[content] %s"%req.content)
@@ -51,8 +51,10 @@ class TK:
         
     def clock(self):
         key = ['market', 'clock']
-        res = self.request(key)['response']['unixtime']
-        return datetime.datetime.fromtimestamp(int(res), tz=GMT5())
+        res = self.request(key)['response']
+        time = res['unixtime']
+        status = res['status']['current']
+        return datetime.datetime.fromtimestamp(int(time), tz=GMT5()), status
         
     def watch(self):
         key = ['watchlists']
@@ -64,6 +66,7 @@ class TK:
         res = self.request(key, 
             params=params,method=urlfetch.POST)['response']['quotes']['quote']
         chain = {}
+        
         for r in res:
             if r is not None:
                 key = float(r['strikeprice'])

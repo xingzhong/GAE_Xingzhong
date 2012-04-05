@@ -206,7 +206,7 @@ class OAuthClient():
       
     #return urlfetch.fetch(url, method=method, headers=headers, payload=payload)
       
-    rpc = urlfetch.create_rpc(deadline=10.0)
+    rpc = urlfetch.create_rpc(deadline=20.0)
     
     #logging.info("[url]%s"%url)
     #logging.info("[method]%s"%method)

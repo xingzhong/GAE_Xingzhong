@@ -1,12 +1,47 @@
 <html>
 <head>
+	<link rel="stylesheet" type="text/css" href="../static/main.css" />
 </head>
 <body>
 	Model: {{quote}}  <br>
 	Real : {{real}}	  <br>
+	Market: {{now}}	  <br>
+	Process: {{costT}}s   <br>
+	<center><table> 
+		<tr>
+			<th>  </th> <th> near </th> <th> next </th>
+		</tr>
+		<tr>
+			<td> Maturity Time </td> <td> {{near}} </td> <td> {{next}} </td> 
+		</tr>
+		<tr>
+			<td> Risk-free Rate </td> <td> {{nearRate}} </td> <td> {{nextRate}} </td> 
+		</tr>
+		<tr>
+			<td> F </td> <td> {{nearF}} </td> <td> {{nextF}} </td> 
+		</tr>
+		<tr>
+			<td> K </td> <td> {{nearK}} </td> <td> {{nextK}} </td> 
+		</tr>
+		<tr>
+			<td> sigma </td> <td> {{nearSigma}} </td> <td> {{nextSigma}} </td> 
+		</tr>
+		<tr>
+			<td> Time </td> <td> {{nearT}} </td> <td> {{nextT}} </td> 
+		</tr>
+		<tr>
+			<td> Call Sigma </td> <td> {{nearCSigma}} </td> <td> {{nextCSigma}} </td> 
+		</tr>
+		<tr>
+			<td> Put Sigma </td> <td> {{nearPSigma}} </td> <td> {{nextPSigma}} </td> 
+		</tr>
+	</table></center>
+	<hr>
+<div id="main">
+	<div id="left">
 	<center><table>
 		<tr> 
-			<th> Strike </th> <th> Call Bid </th> <th> Call Ask </th> <th> Put Bid </th> <th> Put Ask </th> <th> Contribution </th>
+			<th> Strike </th> <th> Call Bid </th> <th> Call Ask </th> <th> Put Bid </th> <th> Put Ask </th> <th> Middle-Quote </th> <th> Contribution </th>
 		</tr>
 		{% for c in nearChain %}
 		{% if c['strk'] == nearK %}
@@ -20,8 +55,33 @@
 			<td> {{c['putBid']}} </td>
 			<td> {{c['putAsk']}} </td>
 			<td> {{c['price']}} </td>
+			<td> {{c['contr']}} </td>
 		<tr>
 		{% endfor %}
 	</table></center>
+	</div>
+	<div id="right">
+	<center><table>
+		<tr> 
+			<th> Strike </th> <th> Call Bid </th> <th> Call Ask </th> <th> Put Bid </th> <th> Put Ask </th> <th> Middle-Quote </th> <th> Contribution </th>
+		</tr>
+		{% for c in nextChain %}
+		{% if c['strk'] == nextK %}
+			<tr bgcolor="gray">
+		{% else %}	
+			<tr>
+		{% endif %}
+			<td> {{c['strk']}} </td>
+			<td> {{c['callBid']}} </td>
+			<td> {{c['callAsk']}} </td>
+			<td> {{c['putBid']}} </td>
+			<td> {{c['putAsk']}} </td>
+			<td> {{c['price']}} </td>
+			<td> {{c['contr']}} </td>
+		<tr>
+		{% endfor %}
+	</table></center>
+	</div>
+	</div>
 </body>
 </html>

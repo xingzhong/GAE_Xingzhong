@@ -44,17 +44,21 @@ def makeSymbol(sym, term, strikes):
 def fromTK(sym):
     """ return tradeking option chain given maturity """
     start = datetime.datetime.now()
-    
+    logging.info("[start]%s"%start)
     t = tk.TK()
+    
+    now, status = t.clock()
+    memcache.set("now", now)
+    logging.info(status)
     
     nearRate = memcache.get("nearRate")
     nextRate = memcache.get("nextRate")
     logging.info("memcache [nearRate nextRate]%s %s"%(nearRate, nextRate))
     if (nearRate and nextRate) is None:
         nearRate, nextRate = riskFree()
-        if not memcache.add("nearRate", nearRate, 3600*12):
+        if not memcache.set("nearRate", nearRate, 3600*12):
             logging.error("nearRate memcache set failed")
-        if not memcache.add("nextRate", nextRate, 3600*12):
+        if not memcache.set("nextRate", nextRate, 3600*12):
             logging.error("nextRate memcache set failed")
         logging.info("Downloading [nearRate nextRate]%s %s"%(nearRate, nextRate))
     
@@ -66,9 +70,9 @@ def fromTK(sym):
         expirations = t.expiration(sym)
         near = expirations[0]
         next = expirations[1]
-        if not memcache.add("near", near, 3600*12):
+        if not memcache.set("near", near, 3600*12):
             logging.error("near memcache set failed")
-        if not memcache.add("next", next, 3600*12):
+        if not memcache.set("next", next, 3600*12):
             logging.error("next memcache set failed")
         logging.info("Downloading [near next]%s %s"%(near, next))
         
@@ -77,14 +81,17 @@ def fromTK(sym):
     logging.info("memcache strikes")
     if strikes is None:
         strikes = t.strike(sym) 
-        if not memcache.add("strikes", strikes, 3600*12):
+        if not memcache.set("strikes", strikes, 3600*12):
             logging.error("strikes memcache set failed")
         logging.info("Downloading strikes")
     
     # calulate normalized time 
-    now = t.clock()
+    
     nearT, nearD = toT(near - now)
     nextT, nextD = toT(next - now)
+    
+    memcache.set("nearT", nearT)
+    memcache.set("nextT", nextT)
     logging.info("[nearT nearD]%s %s"%(nearT, nearD))
     logging.info("[nextT nextD]%s %s"%(nextT, nextD))
     
@@ -95,34 +102,43 @@ def fromTK(sym):
     if (nearOps and nextOps) is None:
         nearOps = makeSymbol(sym, near, strikes)
         nextOps = makeSymbol(sym, next, strikes)
-        if not memcache.add("nearOps", nearOps, 3600*12):
+        if not memcache.set("nearOps", nearOps, 3600*12):
             logging.error("nearOps memcache set failed")
-        if not memcache.add("nextOps", nextOps, 3600*12):
+        if not memcache.set("nextOps", nextOps, 3600*12):
             logging.error("nextOps memcache set failed")
         logging.info("generate symbol lists")
+    
+    if status != 'open' : 
+        return memcache.get("quote")
     
     # cache the data
     nearChain = t.quote(nearOps)
     # calculate the sigma 
-    nearChain, nearF, nearK, nearSigma = getSigma(nearChain, nearRate, nearT)
+    nearChain, nearF, nearK, nearSigma, nearPSigma, nearCSigma = getSigma(
+            nearChain, nearRate, nearT)
     memcache.set_multi(
         {
             'nearChain' : nearChain,
             'nearF' : nearF, 
             'nearK' : nearK, 
-            'nearSigma' : nearSigma
+            'nearSigma' : nearSigma,
+            'nearPSigma' : nearPSigma,
+            'nearCSigma' : nearCSigma,
         }
         )
     logging.info("[nearSigma]%s"%(nearSigma))
     
     nextChain = t.quote(nextOps)
-    nextChain, nextF, nextK, nextSigma = getSigma(nextChain, nextRate, nextT)
+    nextChain, nextF, nextK, nextSigma, nearPSigma, nearCSigma = getSigma(
+            nextChain, nextRate, nextT)
     memcache.set_multi(
         {
             'nextChain' : nextChain,
             'nextF' : nextF, 
             'nextK' : nextK, 
-            'nextSigma' : nextSigma
+            'nextSigma' : nextSigma,
+            'nextPSigma' : nearPSigma,
+            'nextCSigma' : nearCSigma,
         }
         )
     logging.info("[nextSigma]%s"%(nextSigma))
@@ -134,13 +150,16 @@ def fromTK(sym):
             nearT*nearSigma*(nextD-N30)/(nextD-nearD) + 
             nextT*nextSigma*(N30-nearD)/(nextD-nearD) )))
             
-    memcache.add("quote", quote)
+    memcache.set("quote", quote)
     
     real = t.stock('vix')
-    memcache.add("real", real)
+    memcache.set("real", real)
     
     # store to db
     costT = (datetime.datetime.now() - start).total_seconds()
+    memcache.set("costT", costT)
+    logging.info(costT)
+    
     data = vix(
         marketTime = now,
         quoteModel = quote,
@@ -149,7 +168,7 @@ def fromTK(sym):
         riskNear = nearRate,
         riskNext = nextRate,
         nearTerm =  nearT,
-        nextTerm =  nextT
+        nextTerm =  nextT,
         )
     data.put()
     
@@ -160,7 +179,7 @@ def getSigma(chain, rate, time):
     # rate is risk-free rate
     # chain is a dict
     # time is time to maturity (e.g. 0.004)
-    chain = [ (c[0], c[1][0], c[1][1], c[1][2], c[1][3], np.nan) for c in chain.iteritems() ]
+    chain = [ (c[0], c[1][0], c[1][1], c[1][2], c[1][3], np.nan, np.nan) for c in chain.iteritems() ]
     chain = np.array(chain, dtype=[
         ('strk',np.float),
         ('callBid',np.float),
@@ -168,8 +187,10 @@ def getSigma(chain, rate, time):
         ('putBid',np.float),
         ('putAsk',np.float),
         ('price',np.float),
+        ('contr',np.float),
         ])
     chain = np.sort(chain, order='strk')
+    
     kmin = abs ( chain['callBid'] + chain['callAsk'] - chain['putBid'] - chain['putAsk'] )
     index = np.nanargmin(kmin)
     strk = chain[index]['strk']
@@ -177,6 +198,7 @@ def getSigma(chain, rate, time):
             chain[index]['putBid'] - chain[index]['putAsk'])
     expe = np.exp(rate/100 * time)
     F = strk + expe * smallest    
+    logging.info("[F]%s"%F)
     k = chain[chain['strk']<F][-1]['strk']
     indk = np.argwhere (chain['strk'] == k)[0][0]
     chain[indk]['price'] = 0.25 * (chain[index]['callBid'] + chain[index]['callAsk'] + 
@@ -202,11 +224,19 @@ def getSigma(chain, rate, time):
     dk[-1] = chain['strk'][-1] - chain['strk'][-2]
 
     for i in range(len(chain)):
-        chain[i]['price'] = dk[i]/(chain[i]['strk']**2) * expe * chain[i]['price']
+        chain[i]['contr'] = dk[i]/(chain[i]['strk']**2) * expe * chain[i]['price']
     
-    sigma = 2 / time * np.sum(chain['price']) - 1/time * (F/k -1)**2
+    sigma = 2 / time * np.cumsum(chain['contr']) - 1/time * (F/k -1)**2
+    chain['contr']  =  sigma
     
-    return chain, F, float(k), float(sigma)
+    indk = np.argwhere (chain['strk'] == k)[0][0]
+    putSigma = sigma[indk-1]
+    callSigma = sigma[-1]-sigma[indk+1]
+    logging.info("[put  sigma] = %s"%putSigma)
+    logging.info("[call sigma] = %s"%callSigma)
+    
+    sigma = sigma[-1]
+    return chain, F, float(k), float(sigma), float(putSigma), float(callSigma)
 
 def optionChain(sym, maturity, time, rate):
     call, put, yaTime = fromYahoo(sym, maturity, time, rate)
