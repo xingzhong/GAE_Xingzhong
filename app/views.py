@@ -56,6 +56,18 @@ class OptionHandler(webapp2.RequestHandler):
         if maturity:
             near = maturity[0].strftime("%Y-%b-%d %H:%M:%S")
             next = maturity[1].strftime("%Y-%b-%d %H:%M:%S")
+        try:
+            iter(memcache.get("chain1"))
+        except TypeError:
+            chain1 = []
+        else:
+            chain1 = memcache.get("chain2")
+        try:
+            iter(memcache.get("chain2"))
+        except TypeError:
+            chain2 = []
+        else:
+            chain2 = memcache.get("chain2")
         template_values = {
             'author':'Deployed @ Google App Engine', 
             'time':datetime.datetime.now(GMT5()).strftime("%Y-%b-%d %H:%M:%S"),
@@ -63,8 +75,8 @@ class OptionHandler(webapp2.RequestHandler):
             'r13': memcache.get("r13"),
             'near': near,
             'next': next,
-            'chain1' : memcache.get("chain1"),
-            'chain2' : memcache.get("chain2"),
+            'chain1' : chain1,
+            'chain2' : chain2,
             'k1' : memcache.get("k1"), 
             'k2' : memcache.get("k2"), 
             'T1' : memcache.get("nearTerm"),
@@ -90,49 +102,28 @@ class JobHandler(webapp2.RequestHandler):
             logging.info("Not workday, just return")
             return None
         logging.info("Workday, continue")
-        quoteReal, vixTime = myutils.vix()
-        maturity = myutils.maturity(start)
-        r4, r13 = myutils.riskFree()
-        nearTerm = myutils.toT(maturity[0] - start)
-        nextTerm = myutils.toT(maturity[1] - start)
-        chain1,f1, k1, sigma1, yaTime = myutils.optionChain('^GSPC', 
-                maturity[0], nearTerm, r4)
-        chain2,f2, k2, sigma2, yaTime = myutils.optionChain('^GSPC', 
-                maturity[1], nextTerm, r13)
-        quoteModel = myutils.average(sigma1, maturity[0], nearTerm, 
-                sigma2, maturity[1],nextTerm)
-        costT = (datetime.datetime.now() - start).total_seconds()
-        memcache.set_multi({
-            "chain1" : chain1,
-            "chain2" : chain2,
-            "maturity": maturity,
-            "nearTerm" : nearTerm,
-            "nextTerm" : nextTerm,
-            "r4": r4,
-            "r13" : r13,
-            "quoteReal" : quoteReal,
-            "f1" : f1,
-            "f2" : f2,
-            "k1" : k1,
-            "k2" : k2,
-            "sigma1": sigma1,
-            "sigma2": sigma2,
-            "quoteModel": quoteModel,
-            "costT" : costT,
-            "yaTime" : vixTime })
-        data = vix(
-            marketTime = vixTime,
-            quoteModel = quoteModel,
-            quoteReal = quoteReal,
-            timeCost = costT,
-            riskNear = r4,
-            riskNext = r13,
-            nearTerm =  nearTerm,
-            nextTerm =  nextTerm
-            )
-        data.put()
+        quote = myutils.fromTK('SPX')
+        logging.info("update vix %s"%quote)
         
 class TKHandler(webapp2.RequestHandler):   
     def get(self):
-        output = myutils.fromTK('spx',None,None,0.08)
-        self.response.out.write(output)
+        template = jinja_environment.get_template('trade.html')
+        template_values = {
+            'nearRate' : memcache.get("nearRate"),
+            'nextRate' : memcache.get("nextRate"),
+            'near' : memcache.get("near"),
+            'next' : memcache.get("next"),
+            'nearOps' : memcache.get("nearOps"),
+            'nextOps' : memcache.get("nextOps"),
+            'nearChain' : memcache.get("nearChain"),
+            'nearF' : memcache.get("nearF"), 
+            'nearK' : memcache.get("nearK"), 
+            'nearSigma' : memcache.get("nearSigma"),
+            'nextChain' : memcache.get("nextChain"),
+            'nextF' : memcache.get("nextF"), 
+            'nextK' : memcache.get("nextK"), 
+            'nextSigma' : memcache.get("nextSigma"),
+            'quote' : memcache.get("quote"), 
+            'real' : memcache.get("real"),
+        }
+        self.response.out.write(myreplace.replace ( template.render(template_values)))

@@ -1,0 +1,27 @@
+<html>
+<head>
+</head>
+<body>
+	Model: {{quote}}  <br>
+	Real : {{real}}	  <br>
+	<center><table>
+		<tr> 
+			<th> Strike </th> <th> Call Bid </th> <th> Call Ask </th> <th> Put Bid </th> <th> Put Ask </th> <th> Contribution </th>
+		</tr>
+		{% for c in nearChain %}
+		{% if c['strk'] == nearK %}
+			<tr bgcolor="gray">
+		{% else %}	
+			<tr>
+		{% endif %}
+			<td> {{c['strk']}} </td>
+			<td> {{c['callBid']}} </td>
+			<td> {{c['callAsk']}} </td>
+			<td> {{c['putBid']}} </td>
+			<td> {{c['putAsk']}} </td>
+			<td> {{c['price']}} </td>
+		<tr>
+		{% endfor %}
+	</table></center>
+</body>
+</html>

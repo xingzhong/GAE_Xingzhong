@@ -7,6 +7,9 @@ from sets import Set
 import datetime
 import calendar
 import tradeking as tk
+import logging
+from google.appengine.api import memcache
+from models import *
 
 YEARSECS = 525600*60
 
@@ -29,15 +32,185 @@ def logical_test(x, y):
         return np.nan
 
 
-def fromTK(sym, maturity, time, rate):
+def makeSymbol(sym, term, strikes):
+    clists = map(lambda x: "%s%sC%08u"%(sym, term.strftime("%y%m%d"), 1000*x), 
+        strikes)
+    plists = map(lambda x: "%s%sP%08u"%(sym, term.strftime("%y%m%d"), 1000*x), 
+        strikes)
+    clists.extend(plists)
+    #logging.info(clists)
+    return ','.join(clists)
+
+def fromTK(sym):
     """ return tradeking option chain given maturity """
+    start = datetime.datetime.now()
+    
     t = tk.TK()
-    res = t.quote('spx,aapl')
-    return res
+    
+    nearRate = memcache.get("nearRate")
+    nextRate = memcache.get("nextRate")
+    logging.info("memcache [nearRate nextRate]%s %s"%(nearRate, nextRate))
+    if (nearRate and nextRate) is None:
+        nearRate, nextRate = riskFree()
+        if not memcache.add("nearRate", nearRate, 3600*12):
+            logging.error("nearRate memcache set failed")
+        if not memcache.add("nextRate", nextRate, 3600*12):
+            logging.error("nextRate memcache set failed")
+        logging.info("Downloading [nearRate nextRate]%s %s"%(nearRate, nextRate))
+    
+    # get the near and next term options expiration date
+    near = memcache.get("near")
+    next = memcache.get("next")
+    logging.info("memcache [near next]%s %s"%(near, next))
+    if ( near and next ) is None:
+        expirations = t.expiration(sym)
+        near = expirations[0]
+        next = expirations[1]
+        if not memcache.add("near", near, 3600*12):
+            logging.error("near memcache set failed")
+        if not memcache.add("next", next, 3600*12):
+            logging.error("next memcache set failed")
+        logging.info("Downloading [near next]%s %s"%(near, next))
+        
+    # get the available strike prices 
+    strikes = memcache.get("strikes")
+    logging.info("memcache strikes")
+    if strikes is None:
+        strikes = t.strike(sym) 
+        if not memcache.add("strikes", strikes, 3600*12):
+            logging.error("strikes memcache set failed")
+        logging.info("Downloading strikes")
+    
+    # calulate normalized time 
+    now = t.clock()
+    nearT, nearD = toT(near - now)
+    nextT, nextD = toT(next - now)
+    logging.info("[nearT nearD]%s %s"%(nearT, nearD))
+    logging.info("[nextT nextD]%s %s"%(nextT, nextD))
+    
+    # generate symbol lists to query 
+    nearOps = memcache.get("nearOps")
+    nextOps = memcache.get("nextOps")
+    logging.info("memcache nearOps & nextOps")
+    if (nearOps and nextOps) is None:
+        nearOps = makeSymbol(sym, near, strikes)
+        nextOps = makeSymbol(sym, next, strikes)
+        if not memcache.add("nearOps", nearOps, 3600*12):
+            logging.error("nearOps memcache set failed")
+        if not memcache.add("nextOps", nextOps, 3600*12):
+            logging.error("nextOps memcache set failed")
+        logging.info("generate symbol lists")
+    
+    # cache the data
+    nearChain = t.quote(nearOps)
+    # calculate the sigma 
+    nearChain, nearF, nearK, nearSigma = getSigma(nearChain, nearRate, nearT)
+    memcache.set_multi(
+        {
+            'nearChain' : nearChain,
+            'nearF' : nearF, 
+            'nearK' : nearK, 
+            'nearSigma' : nearSigma
+        }
+        )
+    logging.info("[nearSigma]%s"%(nearSigma))
+    
+    nextChain = t.quote(nextOps)
+    nextChain, nextF, nextK, nextSigma = getSigma(nextChain, nextRate, nextT)
+    memcache.set_multi(
+        {
+            'nextChain' : nextChain,
+            'nextF' : nextF, 
+            'nextK' : nextK, 
+            'nextSigma' : nextSigma
+        }
+        )
+    logging.info("[nextSigma]%s"%(nextSigma))
+    
+    
+    N30 = 43200
+    N365 = 525600
+    quote = float(100 * np.sqrt( N365/N30*( 
+            nearT*nearSigma*(nextD-N30)/(nextD-nearD) + 
+            nextT*nextSigma*(N30-nearD)/(nextD-nearD) )))
+            
+    memcache.add("quote", quote)
+    
+    real = t.stock('vix')
+    memcache.add("real", real)
+    
+    # store to db
+    costT = (datetime.datetime.now() - start).total_seconds()
+    data = vix(
+        marketTime = now,
+        quoteModel = quote,
+        quoteReal = real,
+        timeCost = costT,
+        riskNear = nearRate,
+        riskNext = nextRate,
+        nearTerm =  nearT,
+        nextTerm =  nextT
+        )
+    data.put()
+    
+    return quote
+    
+
+def getSigma(chain, rate, time):
+    # rate is risk-free rate
+    # chain is a dict
+    # time is time to maturity (e.g. 0.004)
+    chain = [ (c[0], c[1][0], c[1][1], c[1][2], c[1][3], np.nan) for c in chain.iteritems() ]
+    chain = np.array(chain, dtype=[
+        ('strk',np.float),
+        ('callBid',np.float),
+        ('callAsk',np.float),
+        ('putBid',np.float),
+        ('putAsk',np.float),
+        ('price',np.float),
+        ])
+    chain = np.sort(chain, order='strk')
+    kmin = abs ( chain['callBid'] + chain['callAsk'] - chain['putBid'] - chain['putAsk'] )
+    index = np.nanargmin(kmin)
+    strk = chain[index]['strk']
+    smallest = 0.5 * (chain[index]['callBid'] + chain[index]['callAsk'] - 
+            chain[index]['putBid'] - chain[index]['putAsk'])
+    expe = np.exp(rate/100 * time)
+    F = strk + expe * smallest    
+    k = chain[chain['strk']<F][-1]['strk']
+    indk = np.argwhere (chain['strk'] == k)[0][0]
+    chain[indk]['price'] = 0.25 * (chain[index]['callBid'] + chain[index]['callAsk'] + 
+            chain[index]['putBid'] + chain[index]['putAsk'])
+
+    # select out of money put < k    
+    call = np.extract(chain['strk']>k, chain)
+    put = np.extract(chain['strk']<k, chain)[::-1]
+    for p in findConValue(put['putBid'], put):
+        price = 0.5 * ( p['putBid'] + p['putAsk'] )
+        index = np.argwhere( chain['strk'] == p['strk'])[0][0]
+        chain[index]['price'] = price
+     
+    # select out of money call > k    
+    for c in findConValue(call['callBid'], call):
+        price = 0.5 * ( c['callBid'] + c['callAsk'] )
+        index = np.argwhere( chain['strk'] == c['strk'])[0][0]
+        chain[index]['price'] = price 
+    
+    chain = chain[ np.isnan(chain['price']) == False ]
+    dk = np.convolve(chain['strk'], [0.5, 0, -0.5], 'same')
+    dk[0] = chain['strk'][1] - chain['strk'][0]
+    dk[-1] = chain['strk'][-1] - chain['strk'][-2]
+
+    for i in range(len(chain)):
+        chain[i]['price'] = dk[i]/(chain[i]['strk']**2) * expe * chain[i]['price']
+    
+    sigma = 2 / time * np.sum(chain['price']) - 1/time * (F/k -1)**2
+    
+    return chain, F, float(k), float(sigma)
 
 def optionChain(sym, maturity, time, rate):
-    call, put = fromYahoo(sym, maturity, time, rate)
-    return calculate(call, put, sym, maturity, time, rate)
+    call, put, yaTime = fromYahoo(sym, maturity, time, rate)
+    return calculate(call, put, sym, maturity, time, rate, yaTime)
     
 def fromYahoo(sym, maturity, time, rate):
     """ return yahoo option chain given maturity """
@@ -50,7 +223,10 @@ def fromYahoo(sym, maturity, time, rate):
     tree = etree.HTML(f.read())
     #print "Parsing"
     yaTime = tree.find(".//span[@class='time_rtq']")
-    yaTime = datetime.datetime.strptime(etree.tostring(yaTime, method='text').strip(), "%I:%M%p EDT").time()
+    try:
+        yaTime = datetime.datetime.strptime(etree.tostring(yaTime, method='text').strip(), "%I:%M%p EDT").time()
+    except ValueError:
+        yaTime = datetime.datetime.strptime(etree.tostring(yaTime, method='text').strip(), "%b %d").time()
     yaDate = datetime.datetime.now().date()
     yaTime = datetime.datetime.combine(yaDate, yaTime)
     table = tree.findall(".//table[@class='yfnc_datamodoutline1']")
@@ -71,10 +247,10 @@ def fromYahoo(sym, maturity, time, rate):
             putSpread = map(None, [], [], Bid, Ask)
             put = dict(zip(Strike, putSpread))
         counter = counter + 1
-
+    return call , put, yaTime
     #print "Finish Parsing"
 
-def calculate(call, put, sym, maturity, time, rate):
+def calculate(call, put, sym, maturity, time, rate, yaTime):
     keys = Set(call.keys() + put.keys())
     Nones = ( np.nan, np.nan, np.nan, np.nan)
             
@@ -96,6 +272,10 @@ def calculate(call, put, sym, maturity, time, rate):
     kmin = abs ( chain['callBid'] + chain['callAsk'] - chain['putBid'] - chain['putAsk'] )
 
     index = np.nanargmin(kmin)
+    
+    if np.isnan(index):
+        return chain, -1, float(-1), float(-1), yaTime
+        
     strk = chain[index]['strk']
     smallest = 0.5 * (chain[index]['callBid'] + chain[index]['callAsk'] - 
             chain[index]['putBid'] - chain[index]['putAsk'])
@@ -142,12 +322,12 @@ def dictSort(x):
     """Sort a dict by value"""
     return sorted(x.iteritems(), key=operator.itemgetter(1))
 
-def findConValue(x, v, X):
+def findConValue(x, X):
     """Find the first happen that two consecutive v in x,
         and return the list before it happens.
     """
     y = zip(x, x[1:])
-    res = map ( lambda x : np.isnan(x[0]) and np.isnan(x[1]) , y )
+    res = map ( lambda x : x[0]==0.0 and x[1]==0.0 , y )
     if True in res:
         return X[:res.index(True)]
     else:
@@ -185,24 +365,28 @@ def maturity(date):
     return settledDay(date)[:2]
 
 def toT(x):
-    return x.total_seconds()/YEARSECS
+    t = x.total_seconds()/YEARSECS
+    dt = x.total_seconds()/60
+    return t, dt
 
-def average(s1, t1, dt1, s2, t2, dt2):
-    now = datetime.datetime.now()
+def average(s1, t1, dt1, s2, t2, dt2, now=datetime.datetime.now()):
     Nt1 = (t1-now).total_seconds() / 60
     Nt2 = (t2-now).total_seconds() / 60
     N30 = 43200
     N365 = 525600
     return float(100 * np.sqrt( N365/N30*( dt1*s1*(Nt2-N30)/(Nt2-Nt1) + dt2*s2*(N30-Nt1)/(Nt2-Nt1) )))
 
-def vix():
+def update_vix():
     url = "http://finance.yahoo.com/q/op?s=^vix"
     f = urllib.urlopen(url)
     tree = etree.HTML(f.read())
     quote = tree.find(".//span[@class='time_rtq_ticker']")
-    time = tree.find(".//span[@class='time_rtq']")
+    timeS = tree.find(".//span[@class='time_rtq']")
     quote = float( etree.tostring(quote, method='text') )
-    time = datetime.datetime.strptime(etree.tostring(time, method='text').strip(), "%I:%M%p EDT").time()
+    try:
+        time = datetime.datetime.strptime(etree.tostring(timeS, method='text').strip(), "%I:%M%p EDT").time()
+    except ValueError:
+        time = datetime.datetime.strptime(etree.tostring(timeS, method='text').strip(), "%b %d").time()
     date = datetime.datetime.now().date()
     now = datetime.datetime.combine(date, time)
     return quote , now

@@ -137,7 +137,8 @@ class OAuthClient():
 
     def encode(text):
       return urlquote(str(text), "~")
-
+    
+    headers = {}
     params = {
       "oauth_consumer_key": self.consumer_key,
       "oauth_signature_method": "HMAC-SHA1",
@@ -150,8 +151,10 @@ class OAuthClient():
       params["oauth_token"] = token
     elif self.callback_url:
       params["oauth_callback"] = self.callback_url
-
-    if additional_params:
+      
+    #params = {}
+        
+    if additional_params and method==urlfetch.GET:
         params.update(additional_params)
 
     for k,v in params.items():
@@ -170,10 +173,11 @@ class OAuthClient():
     key = "%s&%s" % (self.consumer_secret, secret) # Note compulsory "&".
     signature = hmac(key, message, sha1)
     digest_base64 = signature.digest().encode("base64").strip()
+    #headers["oauth_signature"] = digest_base64
     params["oauth_signature"] = digest_base64
 
     # Construct the request payload and return it
-    return urlencode(params)
+    return urlencode(params), headers
 
   def make_async_request(self, url, token="", secret="", additional_params=None,
                          protected=False, method=urlfetch.GET, headers={}):
@@ -186,17 +190,29 @@ class OAuthClient():
     A urlfetch response object is returned.
     """
 
-    payload = self.prepare_request(url, token, secret, additional_params,
+    payload, headers = self.prepare_request(url, token, secret, additional_params,
                                    method)
 
     if method == urlfetch.GET:
       url = "%s?%s" % (url, payload)
       payload = None
+    
+    if method == urlfetch.POST:
+      url = "%s?%s" % (url, payload)
+      payload = urlencode(additional_params)
 
     if protected:
       headers["Authorization"] = "OAuth"
-
+      
+    #return urlfetch.fetch(url, method=method, headers=headers, payload=payload)
+      
     rpc = urlfetch.create_rpc(deadline=10.0)
+    
+    #logging.info("[url]%s"%url)
+    #logging.info("[method]%s"%method)
+    #logging.info("[headers]%s"%headers)
+    #logging.info("[payload]%s"%payload)
+    
     urlfetch.make_fetch_call(rpc, url, method=method, headers=headers,
                              payload=payload)
     return rpc
