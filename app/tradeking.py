@@ -54,7 +54,7 @@ class TK:
         res = self.request(key)['response']
         time = res['unixtime']
         status = res['status']['current']
-        return datetime.datetime.fromtimestamp(int(time), tz=GMT5()), status
+        return datetime.datetime.fromtimestamp(int(time), tz=GMT5()).replace(tzinfo=None), status
         
     def watch(self):
         key = ['watchlists']
@@ -96,7 +96,14 @@ class TK:
         params = {'symbol':sym }
         res = self.request(key, params=params)
         res = res['response']['expirationdates']['date']
-        return map(lambda x:datetime.datetime.strptime(x, "%Y-%m-%d").replace(tzinfo=GMT5()), res)
+        #return map(lambda x: datetime.datetime.combine(
+        #        datetime.datetime.strptime(x, "%Y-%m-%d"),
+        #        datetime.time(8,30,tzinfo=GMT5())).replace(tzinfo=GMT5())
+        #        , res)
+        return map(lambda x: datetime.datetime.combine(
+                datetime.datetime.strptime(x, "%Y-%m-%d"),
+                datetime.time(8,30) )
+                , res)
     
     def options(self, sym):
         key = ['market', 'chains']

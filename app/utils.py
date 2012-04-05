@@ -65,7 +65,7 @@ def fromTK(sym):
     # get the near and next term options expiration date
     near = memcache.get("near")
     next = memcache.get("next")
-    logging.info("memcache [near next]%s %s"%(near, next))
+    logging.info("memcache [now near next]%s %s %s"%(now, near, next))
     if ( near and next ) is None:
         expirations = t.expiration(sym)
         near = expirations[0]
@@ -113,6 +113,11 @@ def fromTK(sym):
     
     # cache the data
     nearChain = t.quote(nearOps)
+    logging.info("cache nearChain")
+    
+    nextChain = t.quote(nextOps)
+    logging.info("cache nextChain")
+    
     # calculate the sigma 
     nearChain, nearF, nearK, nearSigma, nearPSigma, nearCSigma = getSigma(
             nearChain, nearRate, nearT)
@@ -128,7 +133,8 @@ def fromTK(sym):
         )
     logging.info("[nearSigma]%s"%(nearSigma))
     
-    nextChain = t.quote(nextOps)
+    #nextChain = t.quote(nextOps)
+    #logging.info("cache nextChain")
     nextChain, nextF, nextK, nextSigma, nearPSigma, nearCSigma = getSigma(
             nextChain, nextRate, nextT)
     memcache.set_multi(
@@ -158,7 +164,7 @@ def fromTK(sym):
     # store to db
     costT = (datetime.datetime.now() - start).total_seconds()
     memcache.set("costT", costT)
-    logging.info(costT)
+    logging.info("[costT]%s"%costT)
     
     data = vix(
         marketTime = now,
@@ -190,6 +196,7 @@ def getSigma(chain, rate, time):
         ('contr',np.float),
         ])
     chain = np.sort(chain, order='strk')
+    logging.info("Finish numpy array ")
     
     kmin = abs ( chain['callBid'] + chain['callAsk'] - chain['putBid'] - chain['putAsk'] )
     index = np.nanargmin(kmin)
@@ -198,7 +205,9 @@ def getSigma(chain, rate, time):
             chain[index]['putBid'] - chain[index]['putAsk'])
     expe = np.exp(rate/100 * time)
     F = strk + expe * smallest    
-    logging.info("[F]%s"%F)
+    logging.info("[Locate F]%s"%F)
+    
+    
     k = chain[chain['strk']<F][-1]['strk']
     indk = np.argwhere (chain['strk'] == k)[0][0]
     chain[indk]['price'] = 0.25 * (chain[index]['callBid'] + chain[index]['callAsk'] + 
@@ -219,12 +228,15 @@ def getSigma(chain, rate, time):
         chain[index]['price'] = price 
     
     chain = chain[ np.isnan(chain['price']) == False ]
+    
+    logging.info("scalable numpy array ")
     dk = np.convolve(chain['strk'], [0.5, 0, -0.5], 'same')
     dk[0] = chain['strk'][1] - chain['strk'][0]
     dk[-1] = chain['strk'][-1] - chain['strk'][-2]
 
     for i in range(len(chain)):
         chain[i]['contr'] = dk[i]/(chain[i]['strk']**2) * expe * chain[i]['price']
+    logging.info("finish contributation calculate ")
     
     sigma = 2 / time * np.cumsum(chain['contr']) - 1/time * (F/k -1)**2
     chain['contr']  =  sigma
