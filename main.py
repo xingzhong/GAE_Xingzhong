@@ -8,5 +8,6 @@ app = webapp2.WSGIApplication([
     ('/', MainHandler), 
     ('/options', OptionHandler),
     ('/job', JobHandler),
-    ('/tk', TKHandler)
+    ('/tk', TKHandler),
+    ('/draw', DrawHandler),
     ], debug=True)

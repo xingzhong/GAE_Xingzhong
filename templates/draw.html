@@ -1,0 +1,30 @@
+<html>
+<head>
+{{head}}
+<script type="text/javascript">
+google.load("visualization", "1", {packages:["corechart"]});
+google.setOnLoadCallback(drawChart);
+function drawChart() {
+	
+	var data = new google.visualization.DataTable();
+	data.addColumn('datetime', 'Time');
+	data.addColumn('number', 'Model-VIX');
+	data.addColumn('number', 'Real-VIX');
+	data.addRows([
+		{% for vix in vixs %}
+			[new Date({{vix.marketTime.year}},{{vix.marketTime.month}},{{vix.marketTime.day}},{{vix.marketTime.hour}},{{vix.marketTime.minute}},{{vix.marketTime.second}}), {{vix.quoteModel}}, {{vix.quoteReal}}],
+		{% endfor %}
+		]);
+	var options = { 
+		title: 'VIX'
+	};
+	var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+	chart.draw(data, options);
+  }
+</script>
+</head>
+<body>
+	<hr>
+	<p> draw {{limit}} samples </p>
+<div id="chart_div"></div>
+</body>

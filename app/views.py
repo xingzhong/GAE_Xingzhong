@@ -108,19 +108,9 @@ class JobHandler(webapp2.RequestHandler):
         
 class TKHandler(webapp2.RequestHandler):   
     def get(self):
-        vixs = memcache.get("vixs")
-        if vixs is None:
-            vixs = db.GqlQuery(""" 
-                select * from vix 
-                WHERE marketTime >= :1
-                ORDER BY marketTime DESC
-                """ , datetime.date.today() - datetime.timedelta(1))
-            if not memcache.add("vixs", vixs, 10):
-                logging.error("vixs memcache set failed")
         template = jinja_environment.get_template('trade.html')
         template_values = {
             'head' : cst.head,
-            'vixs' : vixs,
             'nearRate' : memcache.get("nearRate"),
             'nextRate' : memcache.get("nextRate"),
             'near' : memcache.get("near"),
@@ -147,3 +137,18 @@ class TKHandler(webapp2.RequestHandler):
             'costT' : memcache.get("costT"),
         }
         self.response.out.write(myreplace.replace ( template.render(template_values)))
+        
+class DrawHandler(webapp2.RequestHandler):   
+    def get(self):
+        limit = int( self.request.GET['limit'] )
+        logging.info(limit)
+        data = vix.all()
+        data.order("-marketTime")
+        vixs = data.fetch(limit)
+        template = jinja_environment.get_template('draw.html')
+        template_values = {
+            'head' : cst.head,
+            'vixs' : vixs,
+            'limit': limit,
+        }
+        self.response.out.write(template.render(template_values))

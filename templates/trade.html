@@ -1,27 +1,6 @@
 <html>
 <head>
 {{head}}
-<script type="text/javascript">
-google.load("visualization", "1", {packages:["corechart"]});
-google.setOnLoadCallback(drawChart);
-function drawChart() {
-	
-	var data = new google.visualization.DataTable();
-	data.addColumn('datetime', 'Time');
-	data.addColumn('number', 'Model-VIX');
-	data.addColumn('number', 'Real-VIX');
-	data.addRows([
-		{% for vix in vixs %}
-			[new Date({{vix.marketTime.year}},{{vix.marketTime.month}},{{vix.marketTime.day}},{{vix.marketTime.hour}},{{vix.marketTime.minute}},{{vix.marketTime.second}}), {{vix.quoteModel}}, {{vix.quoteReal}}],
-		{% endfor %}
-		]);
-	var options = { 
-		title: 'VIX'
-	};
-	var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
-	chart.draw(data, options);
-  }
-</script>
 </head>
 <body>
 	<h1> vix model </h1> <hr>
@@ -29,7 +8,6 @@ function drawChart() {
 	<p> Real : {{real}}	  </p>
 	<p> Market: {{now}}	  </p>
 	<p> Process: {{costT}}s   </p>
-	<div id="chart_div"></div> <hr>
 	<center><table> 
 		<tr>
 			<th>  </th> <th> near </th> <th> next </th>
