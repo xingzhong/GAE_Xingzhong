@@ -140,11 +140,12 @@ class TKHandler(webapp2.RequestHandler):
         
 class DrawHandler(webapp2.RequestHandler):   
     def get(self):
-        limit = int( self.request.GET['limit'] )
+        gets = self.request.GET
+        limit = gets.get('limit', 10)
         logging.info(limit)
         data = vix.all()
         data.order("-marketTime")
-        vixs = data.fetch(limit)
+        vixs = data.fetch(int(limit))
         template = jinja_environment.get_template('draw.html')
         template_values = {
             'head' : cst.head,
