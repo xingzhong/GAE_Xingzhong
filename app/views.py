@@ -9,6 +9,7 @@ import replace as myreplace
 import utils as myutils
 from models import *
 import logging
+import constant as cst
 
 
 class GMT5(datetime.tzinfo):
@@ -107,8 +108,19 @@ class JobHandler(webapp2.RequestHandler):
         
 class TKHandler(webapp2.RequestHandler):   
     def get(self):
+        vixs = memcache.get("vixs")
+        if vixs is None:
+            vixs = db.GqlQuery(""" 
+                select * from vix 
+                WHERE marketTime >= :1
+                ORDER BY marketTime DESC
+                """ , datetime.date.today() - datetime.timedelta(1))
+            if not memcache.add("vixs", vixs, 10):
+                logging.error("vixs memcache set failed")
         template = jinja_environment.get_template('trade.html')
         template_values = {
+            'head' : cst.head,
+            'vixs' : vixs,
             'nearRate' : memcache.get("nearRate"),
             'nextRate' : memcache.get("nextRate"),
             'near' : memcache.get("near"),

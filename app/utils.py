@@ -115,8 +115,6 @@ def fromTK(sym):
     nearChain = t.quote(nearOps)
     logging.info("cache nearChain")
     
-    nextChain = t.quote(nextOps)
-    logging.info("cache nextChain")
     
     # calculate the sigma 
     nearChain, nearF, nearK, nearSigma, nearPSigma, nearCSigma = getSigma(
@@ -133,8 +131,8 @@ def fromTK(sym):
         )
     logging.info("[nearSigma]%s"%(nearSigma))
     
-    #nextChain = t.quote(nextOps)
-    #logging.info("cache nextChain")
+    nextChain = t.quote(nextOps)
+    logging.info("cache nextChain")
     nextChain, nextF, nextK, nextSigma, nearPSigma, nearCSigma = getSigma(
             nextChain, nextRate, nextT)
     memcache.set_multi(
@@ -201,6 +199,7 @@ def getSigma(chain, rate, time):
     kmin = abs ( chain['callBid'] + chain['callAsk'] - chain['putBid'] - chain['putAsk'] )
     index = np.nanargmin(kmin)
     strk = chain[index]['strk']
+    logging.info("[Locate Strk]%s"%strk)
     smallest = 0.5 * (chain[index]['callBid'] + chain[index]['callAsk'] - 
             chain[index]['putBid'] - chain[index]['putAsk'])
     expe = np.exp(rate/100 * time)

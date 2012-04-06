@@ -1,4 +1,6 @@
-hr {color:sienna;}
+@import url("http://fonts.googleapis.com/css?family=Berkshire+Swash|Averia+Libre:300,400");
+
+
 p {margin-left:20px;}
 table,td,th {border:1px solid black;}
 
@@ -14,4 +16,15 @@ table,td,th {border:1px solid black;}
 #right  {
     width: 50%;
     margin-left: 50%;
+}
+
+h1 { font-family: 'Berkshire Swash', cursive; font-weight: 400; font-size:300% }
+h2 { font-family: 'Berkshire Swash', cursive; font-weight: 400; font-size:205% }
+hr { border: 0; width: 80%; right: 10%;
+	 background-color: #a32638; height: 4px; position:relative}
+p {font-family: 'Averia Libre', cursive; font-weight: 400; font-size: 105%}
+
+#chart_div {
+    width: 900px; 
+    height: 500px;
 }

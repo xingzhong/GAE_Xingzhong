@@ -96,14 +96,14 @@ class TK:
         params = {'symbol':sym }
         res = self.request(key, params=params)
         res = res['response']['expirationdates']['date']
-        #return map(lambda x: datetime.datetime.combine(
-        #        datetime.datetime.strptime(x, "%Y-%m-%d"),
-        #        datetime.time(8,30,tzinfo=GMT5())).replace(tzinfo=GMT5())
-        #        , res)
         return map(lambda x: datetime.datetime.combine(
                 datetime.datetime.strptime(x, "%Y-%m-%d"),
-                datetime.time(8,30) )
+                datetime.time(8,30,tzinfo=GMT5())).replace(tzinfo=None)
                 , res)
+        #return map(lambda x: datetime.datetime.combine(
+        #        datetime.datetime.strptime(x, "%Y-%m-%d"),
+        #        datetime.time(8,30) )
+        #        , res)
     
     def options(self, sym):
         key = ['market', 'chains']

@@ -1,12 +1,35 @@
 <html>
 <head>
-	<link rel="stylesheet" type="text/css" href="../static/main.css" />
+{{head}}
+<script type="text/javascript">
+google.load("visualization", "1", {packages:["corechart"]});
+google.setOnLoadCallback(drawChart);
+function drawChart() {
+	
+	var data = new google.visualization.DataTable();
+	data.addColumn('datetime', 'Time');
+	data.addColumn('number', 'Model-VIX');
+	data.addColumn('number', 'Real-VIX');
+	data.addRows([
+		{% for vix in vixs %}
+			[new Date({{vix.marketTime.year}},{{vix.marketTime.month}},{{vix.marketTime.day}},{{vix.marketTime.hour}},{{vix.marketTime.minute}},{{vix.marketTime.second}}), {{vix.quoteModel}}, {{vix.quoteReal}}],
+		{% endfor %}
+		]);
+	var options = { 
+		title: 'VIX'
+	};
+	var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+	chart.draw(data, options);
+  }
+</script>
 </head>
 <body>
-	Model: {{quote}}  <br>
-	Real : {{real}}	  <br>
-	Market: {{now}}	  <br>
-	Process: {{costT}}s   <br>
+	<h1> vix model </h1> <hr>
+	<p> Model: {{quote}}  </p>
+	<p> Real : {{real}}	  </p>
+	<p> Market: {{now}}	  </p>
+	<p> Process: {{costT}}s   </p>
+	<div id="chart_div"></div> <hr>
 	<center><table> 
 		<tr>
 			<th>  </th> <th> near </th> <th> next </th>
@@ -43,6 +66,8 @@
 		<tr> 
 			<th> Strike </th> <th> Call Bid </th> <th> Call Ask </th> <th> Put Bid </th> <th> Put Ask </th> <th> Middle-Quote </th> <th> Contribution </th>
 		</tr>
+		{% if nearChain is none %}
+		{%else%}
 		{% for c in nearChain %}
 		{% if c['strk'] == nearK %}
 			<tr bgcolor="gray">
@@ -58,6 +83,7 @@
 			<td> {{c['contr']}} </td>
 		<tr>
 		{% endfor %}
+		{% endif %}
 	</table></center>
 	</div>
 	<div id="right">
@@ -65,6 +91,8 @@
 		<tr> 
 			<th> Strike </th> <th> Call Bid </th> <th> Call Ask </th> <th> Put Bid </th> <th> Put Ask </th> <th> Middle-Quote </th> <th> Contribution </th>
 		</tr>
+		{% if nextChain is none %}
+		{%else%}
 		{% for c in nextChain %}
 		{% if c['strk'] == nextK %}
 			<tr bgcolor="gray">
@@ -80,6 +108,7 @@
 			<td> {{c['contr']}} </td>
 		<tr>
 		{% endfor %}
+		{% endif %}
 	</table></center>
 	</div>
 	</div>
