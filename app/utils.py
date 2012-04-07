@@ -431,6 +431,23 @@ def update_vix():
     date = datetime.datetime.now().date()
     now = datetime.datetime.combine(date, time)
     return quote , now
+
+def quote(sym):
+    t = tk.TK()
+    expirations = t.expiration(sym)
+    near = expirations[1]
+    #underline = t.quote_1(sym)
+    strikes = t.strike(sym)
+    nearOps = makeSymbol(sym, near, strikes)
+    Ops = nearOps.split(',')
+    logging.info(Ops[110])
+    chains = t.quote_1(Ops[110])
+    return chains, near
+    
+
+def status():
+    t = tk.TK()
+    return t.clock()
     
 if __name__ == '__main__':
     #print vix()

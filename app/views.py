@@ -153,3 +153,20 @@ class DrawHandler(webapp2.RequestHandler):
             'limit': limit,
         }
         self.response.out.write(template.render(template_values))
+
+class QuoteHandler(webapp2.RequestHandler):
+    def get(self):
+        time, status = myutils.status()
+        gae = datetime.datetime.now(GMT5()).replace(tzinfo=None)
+        data, maturity = myutils.quote('AAPL')
+        template = jinja_environment.get_template('quote.html')
+        template_values = {
+            'head' : cst.head,
+            'data' : data,
+            'status' : time,
+            'server' : gae,
+            'maturity' : maturity,
+            'responseDict': cst.responseDict,
+        }
+        self.response.out.write(template.render(template_values))
+        

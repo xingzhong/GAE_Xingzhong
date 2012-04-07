@@ -43,7 +43,7 @@ class TK:
     
     def status(self):
         key = ['utility', 'status']
-        return self.request(key)
+        return self.request(key)['response']['time']
         
     def version(self):
         key = ['utility', 'version']
@@ -104,17 +104,16 @@ class TK:
         #        datetime.datetime.strptime(x, "%Y-%m-%d"),
         #        datetime.time(8,30) )
         #        , res)
+        
+    def quote_1(self, sym):
+        
+        key = ['market', 'ext', 'quotes']
+        params = {'symbols':sym }
+        res = self.request(key, 
+            params=params,method=urlfetch.POST)
+        logging.info(res)
+        return res['response']['quotes']['quote']
     
-    def options(self, sym):
-        key = ['market', 'chains']
-        params = {
-        'underlying':sym,
-        'type':'CALL_AND_PUT',
-        'expiration':'ALL',
-        'range':'AT_THE_MONEY'
-        }
-        return self.request(key, params=params)
-
 
 class GMT5(datetime.tzinfo):
     def __init__(self):

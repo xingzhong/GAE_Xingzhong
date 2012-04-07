@@ -1,0 +1,21 @@
+<html>
+<head>
+{{head}}
+</head>
+<body>
+	<p> Tradeking : {{status}} </p>
+	<p> Server    : {{server}} </p>
+	<p> {{maturity}} </p>
+ 	<table>
+	{% for item in data|dictsort %}
+	<tr> 
+		
+		<td>  <p>{{item[0]}}</p>  </td> 
+		<td>  <p>{{item[1]}}</p>   </td>
+		<td> <p>{{responseDict[item[0]]}}</p></td>
+		
+	</tr>
+	{% endfor%}
+	</table>
+</body>
+</html>	
