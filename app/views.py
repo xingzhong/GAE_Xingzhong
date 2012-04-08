@@ -39,7 +39,8 @@ class MainHandler(webapp2.RequestHandler):
     def get(self):
         template_values = {
             'author':'Deployed @ Google App Engine', 
-            'time':datetime.datetime.now(GMT5()).strftime("%Y-%b-%d %H:%M:%S")
+            'time':datetime.datetime.now(GMT5()).strftime("%Y-%b-%d %H:%M:%S"),
+            'head' : cst.head,
             }
         template = jinja_environment.get_template('index.html')
         self.response.out.write(myreplace.replace ( template.render(template_values)))
@@ -158,7 +159,7 @@ class QuoteHandler(webapp2.RequestHandler):
     def get(self):
         time, status = myutils.status()
         gae = datetime.datetime.now(GMT5()).replace(tzinfo=None)
-        data, maturity = myutils.quote('AAPL')
+        data, maturity = myutils.quote('SPY')
         template = jinja_environment.get_template('quote.html')
         template_values = {
             'head' : cst.head,

@@ -111,7 +111,6 @@ class TK:
         params = {'symbols':sym }
         res = self.request(key, 
             params=params,method=urlfetch.POST)
-        logging.info(res)
         return res['response']['quotes']['quote']
     
 

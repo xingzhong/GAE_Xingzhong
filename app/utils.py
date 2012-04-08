@@ -440,8 +440,7 @@ def quote(sym):
     strikes = t.strike(sym)
     nearOps = makeSymbol(sym, near, strikes)
     Ops = nearOps.split(',')
-    logging.info(Ops[110])
-    chains = t.quote_1(Ops[110])
+    chains = t.quote_1(Ops[80])
     return chains, near
     
 
