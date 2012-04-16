@@ -9,6 +9,7 @@ import utils as myutils
 from models import *
 import logging
 import constant as cst
+import controllerPortfolio as conport
 
 
 class GMT5(datetime.tzinfo):
@@ -174,10 +175,26 @@ class QuoteHandler(webapp2.RequestHandler):
 
 class PortfolioHandler(webapp2.RequestHandler):
     def get(self):
-        gets = self.request.GET
         template = jinja_environment.get_template('portfolio.html')
         template_values = {
             'head' : cst.head,
             'responseDict': cst.responseDict,
+        }
+        self.response.out.write(template.render(template_values))
+
+class PortfolioReportHandler(webapp2.RequestHandler):
+    def post(self):
+        symbols = eval( self.request.get('symbol') )
+        shares = eval( self.request.get('share') )
+        times = eval( self.request.get('time') )
+        port = conport.portfolio(symbols, shares, times)
+        template = jinja_environment.get_template('portfolio_report.html')
+        template_values = {
+            'head' : cst.head,
+            'responseDict': cst.responseDict,
+            'symbols' : symbols,
+            'shares' : shares,
+            'times' : times,
+            'data' : port.data(),
         }
         self.response.out.write(template.render(template_values))

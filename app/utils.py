@@ -447,7 +447,9 @@ def quote(sym):
 def status():
     t = tk.TK()
     return t.clock()
-    
+
+
+
 if __name__ == '__main__':
     #print vix()
     optionChain('^GSPC', '2012', '05', '18', 0.125347883345, 0.07)

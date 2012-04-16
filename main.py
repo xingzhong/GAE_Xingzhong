@@ -12,4 +12,5 @@ app = webapp2.WSGIApplication([
     ('/draw', DrawHandler),
     ('/quote', QuoteHandler),
     ('/portfolio', PortfolioHandler),
+    ('/portfolio_report', PortfolioReportHandler),
     ], debug=True)

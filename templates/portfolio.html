@@ -1,9 +1,28 @@
 <html>
 <head>
 {{head}}
+<script type="text/javascript" src="../static/portfolio.js"></script>
 </head>
 <body>
-	<div id="title">Portfolio</div><hr>
+	
+	<div id="title">Portfolio Final Project</div><hr>
+	
+	<table id="list" >
+		<tr>
+			<td> symbol </td> 
+			<td> share </td> 
+			<td> time </td> 
+		</tr>
+	</table>
+	
+	<form action="portfolio_report" method="post">
+		<input type="text" name="symbol" value='AAPL'/>
+		<input type="text" name="share" value='100'/>
+		<input type="text" name="time" value='20120211'/>
+		<input type="button" value="add one" onClick="addOneLine(this.form)">
+		<input type="button" value="submit all" onClick="submitAll(this.form)">
+	</form>
+	<hr>
 	<div id="footer">Xingzhong 2012</div>
 </body>
 </html>
