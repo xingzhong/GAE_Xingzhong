@@ -434,14 +434,14 @@ def update_vix():
 
 def quote(sym):
     t = tk.TK()
-    expirations = t.expiration(sym)
-    near = expirations[1]
-    #underline = t.quote_1(sym)
-    strikes = t.strike(sym)
-    nearOps = makeSymbol(sym, near, strikes)
-    Ops = nearOps.split(',')
-    chains = t.quote_1(Ops[80])
-    return chains, near
+    #expirations = t.expiration(sym)
+    #near = expirations[1]
+    underline = t.quote_1(sym)
+    #strikes = t.strike(sym)
+    #nearOps = makeSymbol(sym, near, strikes)
+    #Ops = nearOps.split(',')
+    #chains = t.quote_1(Ops[80])
+    return underline
     
 
 def status():

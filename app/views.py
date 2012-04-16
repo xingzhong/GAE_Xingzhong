@@ -1,7 +1,6 @@
 import webapp2
 import sys
 import os
-import webapp2
 from google.appengine.api import memcache
 import jinja2
 import datetime
@@ -157,17 +156,28 @@ class DrawHandler(webapp2.RequestHandler):
 
 class QuoteHandler(webapp2.RequestHandler):
     def get(self):
+        gets = self.request.GET
+        symbol = gets.get('symbol', 'SPX')
         time, status = myutils.status()
         gae = datetime.datetime.now(GMT5()).replace(tzinfo=None)
-        data, maturity = myutils.quote('SPY')
+        data = myutils.quote(symbol)
         template = jinja_environment.get_template('quote.html')
         template_values = {
             'head' : cst.head,
             'data' : data,
             'status' : time,
             'server' : gae,
-            'maturity' : maturity,
             'responseDict': cst.responseDict,
         }
         self.response.out.write(template.render(template_values))
-        
+
+
+class PortfolioHandler(webapp2.RequestHandler):
+    def get(self):
+        gets = self.request.GET
+        template = jinja_environment.get_template('portfolio.html')
+        template_values = {
+            'head' : cst.head,
+            'responseDict': cst.responseDict,
+        }
+        self.response.out.write(template.render(template_values))
