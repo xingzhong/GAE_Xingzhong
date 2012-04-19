@@ -144,7 +144,12 @@ def get_price_book_ratio(symbol):
 def get_short_ratio(symbol): 
     return __request(symbol, 's7')
     
+def get_year_target(symbol): 
+    return __request(symbol, 't8')
     
+def get_last_close(symbol): 
+    return __request(symbol, 'p')
+
 def get_historical_prices(symbol, start_date, end_date):
     """
     Get historical prices for the given ticker symbol.
@@ -178,4 +183,5 @@ def matrix(data):
     return np.array(iterable, dtype=dt)
 
 if __name__ == '__main__':
-    get_historical_prices('GOOG', '20120123', '20120326')
+    #get_historical_prices('GOOG', '20120123', '20120326')
+    print float(get_year_target('AAPL'))

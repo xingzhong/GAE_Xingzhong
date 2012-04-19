@@ -1,0 +1,26 @@
+<table id="hor-minimalist-b">
+	<thead>
+		<tr> 
+		<th> Symbol </th> 
+		<th> Weight </th> 
+		<th> Shares </th> 
+		<th> Value Cost </th> 
+		</tr>
+	</thead>
+    <tbody>
+	{% for d in activeTable %}
+	<tr>
+		<td>{{d[0]}} </td> 
+		<td> {{d[1]|replace("[","")|replace("]","")}} </td> 
+		<td> {{d[2]|replace("[","")|replace("]","")}} </td>
+		<td> {{d[3]|replace("[","")|replace("]","")}} </td>
+	</tr>
+	{% endfor %}
+	<tr>
+		<td> Portfolio </td> 
+		<td> {{activeWeightSum}} </td> 
+		<td>  </td>
+		<td> {{activeValueSum}} </td>
+	</tr>
+	</tbody>
+</table>

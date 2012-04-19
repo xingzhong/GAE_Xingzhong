@@ -16,6 +16,9 @@ handlers:
   script: main.app
   login: admin
 
+- url: /picloudjob
+  script: main.app
+
 - url: .*
   script: main.app
   

@@ -1,15 +1,218 @@
 <html>
 <head>
 {{head}}
+<script type="text/javascript">
+google.load("visualization", "1", {packages:["corechart"]});
+google.setOnLoadCallback(drawChart);
+function drawChart() {
+	
+	var data = new google.visualization.DataTable();
+	data.addColumn('datetime', 'Time');
+	data.addColumn('number', 'Performance');
+	data.addRows([
+		{% for d in data %}
+			[new Date({{d[0].year}},{{d[0].month}},{{d[0].day}}), {{d[1]|replace("[","")|replace("]","")}}],
+		{% endfor %}
+		]);
+	var options = { 
+		title: 'Performance'
+	};
+	var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+	chart.draw(data, options);
+  }
+</script>
+<script type="text/javascript" src="../static/portfolio.js"></script>
 </head>
 <body>
 	
 	<div id="title">Portfolio Final Report</div><hr>
-
-	{{symbols}} <br>
-	{{shares}} <br>
-	{{times}} <br>
-	{{data}}
+	<h2> Introduction </h2>
+	<p> Starting from {{port.start}} till {{port.marketTime[-1]}}, the portfolio shows below runs {{port.days}} business days. </p>
+	<p> All price are dividend adjusted from Yahoo Finance. </p>
+	<table id="hor-minimalist-b">
+		<thead>
+		<tr> <th> Symbol </th> <th> Share </th> <th> Weight </th> 
+			<th> Price Cost </th> <th> Value Cost </th>
+			<th> Last Price </th> <th> Market Value </th>
+		</tr>
+		</thead>
+	    <tbody>
+		{% for d in tableData %}
+		<tr>
+			<td>{{d[0]}} </td> 
+			<td> {{d[1]|replace("[","")|replace("]","")}} </td> 
+			<td> {{d[2]|replace("[","")|replace("]","")}} </td>
+			<td> {{d[3]|replace("[","")|replace("]","")}} </td>
+			<td> {{d[4]|replace("[","")|replace("]","")}} </td>
+			<td> {{d[5]|replace("[","")|replace("]","")}} </td>
+			<td> {{d[6]|replace("[","")|replace("]","")}} </td>
+		</tr>
+		{% endfor %}
+		<tr>
+			<td> Portfolio </td> 
+			<td>  </td> 
+			<td> {{portweightsum}} </td>
+			<td>  </td>
+			<td> {{portCostsum}} </td>
+			<td>  </td>
+			<td>  {{portMktvalue}}</td>
+		</tr>
+		</tbody>
+	</table>
+	<hr>
+	<h2> Performance </h2>
+	<p> The following metrics are calculated to evaluate our portfolio performance, </p>
+	<ul>
+		<li> 
+	<p> Portfolio total Return : {{((ret[-1]-1)*100)|replace("[","")|replace("]","")}}% and Annualized Return : {{(annualRet*100)|replace("[","")|replace("]","")}}% </p>
+	<pre class="latex block">r_t = \frac{V_t-V_0}{V_0}</pre>
+	<pre class="latex block">r_t = (1+\hat{r}_t)^{\frac{D}{250}} - 1</pre>
+		</li>
+		<li>
+	<p> Portfolio total Risk : {{risk*100}}% and Annualized Risk : {{annualRisk*100}}%</p>
+	<pre class="latex block">\sigma = \text{std}(r)</pre>
+	<pre class="latex block">\hat{\sigma} = \sqrt{250} \sigma </pre>
+		</li>
+		<li>
+	<p> Portfolio Sharpe Ratio : {{sharpRatio|replace("[","")|replace("]","")}}.
+		<pre class="latex block">\text{Sharp} = \frac{\hat{r}-r_f}{\hat{\sigma}}</pre>
+		</li>
+	</ul>
+	<div id="chart_div"></div>
+	<hr>
+	<h2> Split Portfolio <h2>
+	<h3> Long Only Portfolio </h3>
+	<p> In this portfolio, we split the previous one to half and then rebalance it to a long only portfolio.</p>
+	<p> Now you portfolio have {{portMktvalue}}$ assets, we only can manage half of it which is equals to {{portMktvalue/2}}$. </p>
+	<p> Then we estimate the expected return of each stock. For simplicity, here we just use the Yahoo Finance's 1 year price estimation as bellow. </p>
+	<table id="hor-minimalist-b" name="expectedRet">
+		<thead>
+		<tr> 
+			<th> Symbol </th>
+			<th> Last Price </th> 
+			<th> 1 year target </th>
+			<th> Expected Return </th> 
+		</tr>
+		</thead>
+	    <tbody>
+		{% for d in tableForecast %}
+		<tr>
+			<td> {{d[0]}} </td> 
+			<td> {{d[1]}} </td> 
+			<td> {{d[2]}} </td> 
+			<td> {{d[3]*100}}% </td> 
+		</tr>
+		{% endfor %}
+		</tbody>
+	</table>
+	<p>The historical return covariance matrix is obtained by, </p>
+	<pre class="latex block"> \mathbf{Q}_{ij} = \text{E}((X_i-\mu_i)(X_j-\mu_j)) </pre>
+	<p>
+	For simplicity, here we just use the above portfolio's {{port.days}} business days' historical data to calculate the covariance matrix. 
+	</p>
+	<table id="newspaper-a">
+		{% for dd in convariance %}
+		<tr>
+			{% for d in dd %}
+			<td> {{d*100}}% </td> 
+			{% endfor %}
+		</tr>
+		{% endfor %}	
+	</table>
+	<p>The optimum portfolio is therefore given by the following optimization problem,</p>
+	<pre class="latex block"> 
+		\arg\min_{\mathbf{x}} \; \frac{1}{2}\mathbf{x}^T \mathbf{Q} \mathbf{x} - \tau \mathbf{\mu}^T \mathbf{x}
+	</pre> 
+	<p> with the following constraints, </p>
+	<pre class="latex block"> 
+		\mathbf{\iota}^T \mathbf{x} = 1 
+	</pre>
+	<pre class="latex block"> 
+		\mathbf{x}_i > 0
+	</pre>
+	<p>
+		Then solve above non-negative equally constraint quadratic programming ,
+	</p>
+	<p> Our 1-year expected return of the active portfolio will be </p>
+	<div id="longOnlyExpRet"> </div>
+	<p>%. </p>
+	<table id="hor-minimalist-a">
+		<thead>
+			<tr> 
+			<th> Symbol </th> 
+			<th> Weight </th> 
+			<th> Shares </th> 
+			<th> Value Cost </th> 
+			</tr>
+		</thead>
+	    <tbody>
+		{% for d in tableForecast %}
+		<tr>
+			<td>{{d[0]}} </td> 
+			<td> 0 </td> 
+			<td>{{d[1]}} </td>
+			<td> {{portMktvalue/2}} </td>
+		</tr>
+		{% endfor %}
+		</tbody>
+	</table>
+	<input type="button" value="Show Results" onClick="showResult()"> 
+	<h3> Active Portfolio </h3>
+	<p> In this portfolio, we split the previous one to half and then rebalance it to an active portfolio which has 4% tracking error to the S&P500. The optimum portfolio is therefore given by the following optimization problem, </p>
+	<pre class="latex block"> 
+		\max_{\mathbf{\alpha}} \; \alpha_A = \mathbf{\mu}^T \mathbf{\alpha}
+	</pre>
+	<p> with the following constraints, </p>
+	<pre class="latex block"> 
+		\mathbf{\iota}^T \mathbf{\alpha} = 0 
+	</pre>
+	<pre class="latex block"> 
+		\mathbf{\alpha}^T \mathbf{Q} \mathbf{\alpha} = \omega_T^2
+	</pre>
+	<p> Luckily, for above convex optimization, we have analytical solution, </p>
+	<pre class="latex block"> 
+		\mathbf{\alpha} = \pm \frac{\omega_T}{\sqrt{d}} \mathbf{Q}^{-1} (\mathbf{\mu} - \frac{c}{b} \mathbf{\iota})
+	</pre>
+	<p>whereas, </p>
+	<pre class="latex block"> 
+		a = \mathbf{\mu}^T \mathbf{Q}^{-1} \mathbf{\mu} 
+	</pre>
+	<pre class="latex block"> 
+		b = \mathbf{\mu}^T \mathbf{Q}^{-1} \mathbf{\iota} 
+	</pre>
+	<pre class="latex block"> 
+		c = \mathbf{\iota}^T \mathbf{Q}^{-1} \mathbf{\iota} 
+	</pre>
+	<pre class="latex block"> 
+		d = a - b^2 / c
+	</pre>
+	<p> Our 1-year expected return of the active portfolio will be {{(activeRet*100)|replace("[","")|replace("]","")}}%. </p>
+	<table id="hor-minimalist-b">
+		<thead>
+			<tr> 
+			<th> Symbol </th> 
+			<th> Weight </th> 
+			<th> Shares </th> 
+			<th> Value Cost </th> 
+			</tr>
+		</thead>
+	    <tbody>
+		{% for d in activeTable %}
+		<tr>
+			<td>{{d[0]}} </td> 
+			<td> {{d[1]|replace("[","")|replace("]","")}} </td> 
+			<td> {{d[2]|replace("[","")|replace("]","")}} </td>
+			<td> {{d[3]|replace("[","")|replace("]","")}} </td>
+		</tr>
+		{% endfor %}
+		<tr>
+			<td> Portfolio </td> 
+			<td> {{activeWeightSum}} </td> 
+			<td>  </td>
+			<td> {{activeValueSum}} </td>
+		</tr>
+		</tbody>
+	</table>
 	<hr>
 	<div id="footer">Xingzhong 2012</div>
 </body>

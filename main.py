@@ -13,4 +13,5 @@ app = webapp2.WSGIApplication([
     ('/quote', QuoteHandler),
     ('/portfolio', PortfolioHandler),
     ('/portfolio_report', PortfolioReportHandler),
+    ('/picloudjob',PicloudWorkerHandler),
     ], debug=True)

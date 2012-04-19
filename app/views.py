@@ -2,6 +2,7 @@ import webapp2
 import sys
 import os
 from google.appengine.api import memcache
+from google.appengine.api import taskqueue
 import jinja2
 import datetime
 import replace as myreplace
@@ -10,7 +11,10 @@ from models import *
 import logging
 import constant as cst
 import controllerPortfolio as conport
-
+import numpy as np
+import picloud as pc
+import urllib
+import json
 
 class GMT5(datetime.tzinfo):
     def __init__(self):
@@ -187,14 +191,61 @@ class PortfolioReportHandler(webapp2.RequestHandler):
         symbols = eval( self.request.get('symbol') )
         shares = eval( self.request.get('share') )
         times = eval( self.request.get('time') )
-        port = conport.portfolio(symbols, shares, times)
+        cash  = float( self.request.get('cash') )
+        port = conport.portfolio(symbols, shares, times, cash)
+        performance = port.data()
+        tableData  = zip(port.symbols, port.shares, port.weight, port.start_price,
+                            port.start_value, port.currentPrice, port.currentValue)
+        tableForecast = conport.forecast(symbols)
+        expectedRet = [d[3] for d in tableForecast]
+        symbols, actW, actS, actV, actR = port.active(expectedRet)
+        tableActive = zip(symbols, actW.flat, actS.flat, actV.flat)
+        picloud_data = {'Q':json.dumps(port.Q.tolist()), 'mu':json.dumps(expectedRet)}
+        #picloud_data = json.dumps(picloud_data)
+        logging.info(picloud_data)
+        taskqueue.add(url='/picloudjob', params=picloud_data)
         template = jinja_environment.get_template('portfolio_report.html')
         template_values = {
             'head' : cst.head,
             'responseDict': cst.responseDict,
-            'symbols' : symbols,
-            'shares' : shares,
-            'times' : times,
-            'data' : port.data(),
+            'data' : performance,
+            'weight' : port.weight,
+            'ret' : port.ret,
+            'compondRet' : port.compondRet,
+            'annualRet' : port.annualRet,
+            'tableData': tableData,
+            'risk' : port.risk,
+            'annualRisk' : port.annualRisk,
+            'sharpRatio' : port.sharpRatio(),
+            'port': port,
+            'portweightsum': np.sum(port.weight),
+            'portCostsum' : np.sum(port.start_value),
+            'portMktvalue': np.sum(port.currentValue),
+            'cash' : cash,
+            'tableForecast': tableForecast,
+            'convariance' : port.Q,
+            'activeTable' : tableActive,
+            'activeWeightSum' : np.sum(actW),
+            'activeValueSum'  : np.sum(actV),
+            'activeRet' : actR,
+            'expectedRet' : expectedRet,
         }
         self.response.out.write(template.render(template_values))
+        
+class PicloudWorkerHandler(webapp2.RequestHandler):
+    def get(self):
+        cloudid = memcache.get(key='CID')
+        data = memcache.get('CID%s'%cloudid)
+        temp = ",".join(str(v) for v in data['result'])
+        self.response.out.write(temp)
+        
+    def post(self):
+        Q = self.request.get('Q')
+        mu = self.request.get('mu')
+        logging.info(mu)
+        params = {"Q":Q, 'mu':mu}
+        cloudid = pc.cloud(params)
+        memcache.set(key='CID', value=cloudid)
+        res = pc.cloud_res(cloudid)
+        memcache.set(key='CID%s'%cloudid, value=res)
+        
