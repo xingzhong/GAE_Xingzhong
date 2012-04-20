@@ -6,8 +6,9 @@
 <body>
 	
 	<div id="title">Portfolio Final Project</div><hr>
-	<p> Enter your portfolio: </p>
+	
 	<form action="portfolio_report" method="post">
+		<p> Enter your portfolio below </p> 
 		<table id="one-column-emphasis" >
 			<colgroup>
 		    	<col class="oce-first" />
@@ -39,6 +40,8 @@
 		</table>
 		<p>I remain <input type="text" name="cash" value="100000" /> $ for risk-free investment.</p>
 		<input type="button" value="submit all" onClick="submitAll(this.form)">
+		<p> or directly pre-load Xingzhong's FE-630 Portfolio. </p>
+		<input type="button" value="Xingzhong's FE-630 Portfolio" onClick="preload(this.form)">
 	</form> 
 	<hr>
 	<div id="footer">Xingzhong 2012</div>

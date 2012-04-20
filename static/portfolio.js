@@ -24,6 +24,24 @@ function submitAll(form){
     form.submit();
 }
 
+function preload(form){
+    var xu_symbol = new Array("AAPL", "BA" , "C", "F", "GOOG", "HPQ", "INTC",
+        "M", "MSFT", "T", "AMZN", "BAC", "CSCO", "GE", "GS", "IBM", "KO", "MCD",
+        "PFE", "XOM");
+    var xu_share = new Array("44", "852" , "1605", "284", "144", "-3306", "4300",
+        "776", "-10628", "-752", "-366", "-18964", "3306", "5848", "-133", "710",
+        "-2073", "1411", "-323", "1010");
+    var xu_time = new Array("20120210", "20120210", "20120210", "20120210", 
+    "20120210", "20120210", "20120210", "20120210", "20120210", "20120210",
+    "20120210", "20120210", "20120210", "20120210", "20120210", "20120210",
+    "20120210", "20120210", "20120210", "20120210");
+    form.elements[0].value = toList(xu_symbol);
+    form.elements[1].value = toList(xu_share);
+    form.elements[2].value = toList(xu_time);
+    form.elements[4].value = '16110';
+    form.submit();
+}
+
 function toList(array){
     var len = array.length;
     var list = new String();
@@ -67,7 +85,7 @@ function showResult(){
                 Ret = Ret + parseFloat(ret.innerHTML) * parseFloat(wei.innerHTML);
                 
             }
-            $("#longOnlyExpRet").text(Ret);
+            $("longOnlyExpRet").text(Ret);
         }
     }
     xmlhttp.open("GET","/picloudjob",true);
