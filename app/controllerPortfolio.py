@@ -36,6 +36,7 @@ class portfolio:
         
     def _yahoo(self, symbol, time):
         today = datetime.datetime.today().date().strftime("%Y%m%d")
+        #today = "20120428"
         start = time.strftime("%Y%m%d")
         data = ya.get_historical_prices(symbol, start, today)
         return np.sort(data, order='date')
@@ -72,7 +73,7 @@ class portfolio:
         b = expectRet * self.invQ * iota.T 
         c = iota * self.invQ * iota.T 
         d = a - b*b/c
-        weight = wt/np.sqrt(d[0,0]) * self.invQ * (expectRet - b[0,0]/c[0,0]*iota).T
+        weight = np.sqrt(wt)/np.sqrt(d[0,0]) * self.invQ * (expectRet - b[0,0]/c[0,0]*iota).T
         activeRet = expectRet * weight
         cashWeight = cash * weight
         shares = cashWeight.T / self.currentPrice[0:-1]

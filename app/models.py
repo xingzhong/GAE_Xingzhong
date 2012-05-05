@@ -12,3 +12,8 @@ class vix(db.Model):
     nearTerm =  db.FloatProperty()
     nextTerm =  db.FloatProperty()
     
+class intraday(db.Model):
+    timestamp = db.DateTimeProperty(required=True)
+    symbol = db.StringProperty(required=True)
+    quote  = db.FloatProperty(required=True)
+    

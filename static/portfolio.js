@@ -24,7 +24,7 @@ function submitAll(form){
     form.submit();
 }
 
-function preload(form){
+function preload1(form){
     var xu_symbol = new Array("AAPL", "BA" , "C", "F", "GOOG", "HPQ", "INTC",
         "M", "MSFT", "T", "AMZN", "BAC", "CSCO", "GE", "GS", "IBM", "KO", "MCD",
         "PFE", "XOM");
@@ -39,6 +39,25 @@ function preload(form){
     form.elements[1].value = toList(xu_share);
     form.elements[2].value = toList(xu_time);
     form.elements[4].value = '16110';
+    form.submit();
+}
+
+
+function preload2(form){
+    var xu_symbol = new Array("AAPL", "BA" , "C", "F", "GOOG", "HPQ", "INTC",
+        "M", "MSFT", "T", "AMZN", "BAC", "CSCO", "GE", "GS", "IBM", "KO", "MCD",
+        "PFE", "XOM");
+    var xu_share = new Array("-537", "863" , "10840", "75000", "1446", "-5775", "-6819",
+        "-6919", "-2541", "-20296", "618", "-20797", "-2615", "23641", "-5508", "-1273",
+        "-13018", "2141", "21053", "5021");
+    var xu_time = new Array("20120427", "20120427", "20120427", "20120427", 
+    "20120427", "20120427", "20120427", "20120427", "20120427", "20120427",
+    "20120427", "20120427", "20120427", "20120427", "20120427", "20120427",
+    "20120427", "20120427", "20120427", "20120427");
+    form.elements[0].value = toList(xu_symbol);
+    form.elements[1].value = toList(xu_share);
+    form.elements[2].value = toList(xu_time);
+    form.elements[4].value = '1';
     form.submit();
 }
 
@@ -78,14 +97,14 @@ function showResult(){
                 var val = table.rows[d+1].cells[3];
                 var ret = expRet.rows[d+1].cells[3];
                 
-                wei.innerHTML = parseFloat(data[d]);
-                val.innerHTML = parseFloat(data[d]) * parseFloat(val.innerHTML);
-                sha.innerHTML = parseFloat(val.innerHTML) / parseFloat(sha.innerHTML);
+                wei.innerHTML = parseFloat(data[d]).toFixed(4);
+                val.innerHTML = (parseFloat(data[d]) * parseFloat(val.innerHTML)).toFixed(2);
+                sha.innerHTML = (parseFloat(val.innerHTML) / parseFloat(sha.innerHTML)).toFixed(2);
                 
                 Ret = Ret + parseFloat(ret.innerHTML) * parseFloat(wei.innerHTML);
                 
             }
-            $("longOnlyExpRet").text(Ret);
+            $("longOnlyExpRet").text(Ret.toFixed(4));
         }
     }
     xmlhttp.open("GET","/picloudjob",true);

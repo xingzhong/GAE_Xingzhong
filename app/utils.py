@@ -442,7 +442,15 @@ def quote(sym):
     #Ops = nearOps.split(',')
     #chains = t.quote_1(Ops[80])
     return underline
-    
+
+def cache(sym):
+    for s in sym:
+        full = quote(s)
+        store = intraday(
+            timestamp = datetime.datetime.fromtimestamp(int(full['timestamp'])),
+            quote = float(full['last']),
+            symbol = full['symbol'])
+        store.put()
 
 def status():
     t = tk.TK()

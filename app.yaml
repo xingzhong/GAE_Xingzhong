@@ -12,6 +12,10 @@ handlers:
 - url: /static
   static_dir: static
 
+- url: /cache
+  script: main.app
+  login: admin
+
 - url: /job
   script: main.app
   login: admin

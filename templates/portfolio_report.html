@@ -41,21 +41,21 @@ function drawChart() {
 		<tr>
 			<td>{{d[0]}} </td> 
 			<td> {{d[1]|replace("[","")|replace("]","")}} </td> 
-			<td> {{d[2]|replace("[","")|replace("]","")}} </td>
-			<td> {{d[3]|replace("[","")|replace("]","")}} </td>
-			<td> {{d[4]|replace("[","")|replace("]","")}} </td>
-			<td> {{d[5]|replace("[","")|replace("]","")}} </td>
-			<td> {{d[6]|replace("[","")|replace("]","")}} </td>
+			<td> {{d[2]|round(4)|replace("[","")|replace("]","")}} </td>
+			<td> {{d[3]|round(2)|replace("[","")|replace("]","")}} </td>
+			<td> {{d[4]|round(2)|replace("[","")|replace("]","")}} </td>
+			<td> {{d[5]|round(2)|replace("[","")|replace("]","")}} </td>
+			<td> {{d[6]|round(2)|replace("[","")|replace("]","")}} </td>
 		</tr>
 		{% endfor %}
 		<tr>
 			<td> Portfolio </td> 
 			<td>  </td> 
-			<td> {{portweightsum}} </td>
+			<td> {{portweightsum|round(2)}} </td>
 			<td>  </td>
-			<td> {{portCostsum}} </td>
+			<td> {{portCostsum|round(2)}} </td>
 			<td>  </td>
-			<td>  {{portMktvalue}}</td>
+			<td>  {{portMktvalue|round(2)}}</td>
 		</tr>
 		</tbody>
 	</table>
@@ -83,7 +83,7 @@ function drawChart() {
 	<h2> Split Portfolio <h2>
 	<h3> Long Only Portfolio </h3>
 	<p> In this portfolio, we split the previous one to half and then rebalance it to a long only portfolio.</p>
-	<p> Now you portfolio have {{portMktvalue}}$ assets, we only can manage half of it which is equals to {{portMktvalue/2}}$. </p>
+	<p> Now you portfolio have {{portMktvalue|round(2)}}$ assets, we only can manage half of it which is equals to {{(portMktvalue/2)|round(2)}}$. </p>
 	<p> Then we estimate the expected return of each stock. For simplicity, here we just use the Yahoo Finance's 1 year price estimation as bellow. </p>
 	<table id="hor-minimalist-b" name="expectedRet">
 		<thead>
@@ -100,7 +100,7 @@ function drawChart() {
 			<td> {{d[0]}} </td> 
 			<td> {{d[1]}} </td> 
 			<td> {{d[2]}} </td> 
-			<td> {{d[3]*100}}% </td> 
+			<td> {{(d[3]*100)|round(4)}}% </td> 
 		</tr>
 		{% endfor %}
 		</tbody>
@@ -114,8 +114,9 @@ function drawChart() {
 		{% for dd in convariance %}
 		<tr>
 			{% for d in dd %}
-			<td> {{d*100}}% </td> 
+			<td> {{d}} </td> 
 			{% endfor %}
+			<td> ; </td>
 		</tr>
 		{% endfor %}	
 	</table>
@@ -199,16 +200,16 @@ function drawChart() {
 		{% for d in activeTable %}
 		<tr>
 			<td>{{d[0]}} </td> 
-			<td> {{d[1]|replace("[","")|replace("]","")}} </td> 
-			<td> {{d[2]|replace("[","")|replace("]","")}} </td>
-			<td> {{d[3]|replace("[","")|replace("]","")}} </td>
+			<td> {{d[1]|round(4)|replace("[","")|replace("]","")}} </td> 
+			<td> {{d[2]|round(2)|replace("[","")|replace("]","")}} </td>
+			<td> {{d[3]|round(2)|replace("[","")|replace("]","")}} </td>
 		</tr>
 		{% endfor %}
 		<tr>
 			<td> Portfolio </td> 
-			<td> {{activeWeightSum}} </td> 
+			<td> {{activeWeightSum|round(2)}} </td> 
 			<td>  </td>
-			<td> {{activeValueSum}} </td>
+			<td> {{activeValueSum|round(2)}} </td>
 		</tr>
 		</tbody>
 	</table>

@@ -14,7 +14,11 @@ dict = {
     "GNU-Radio" :
         "<a href='http://gnuradio.org/' >GNU-Radio</a>",
     "clang" :
-        "<a href='http://clang.llvm.org/' >clang</a>"
+        "<a href='http://clang.llvm.org/' >clang</a>",
+    "julia" :
+        "<a href='http://julialang.org/' >Julia</a>",
+    "aws" :
+        "<a href='http://aws.amazon.com/' >Amazon Web Service</a>"
 }
 
 def replace(s):

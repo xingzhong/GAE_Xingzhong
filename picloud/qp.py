@@ -7,7 +7,7 @@ import cloud
 def qp(Q, mu):
     Q = np.matrix(Q)
     mu = np.array(mu)
-    tao = 0.5
+    tao = 0.2
     x0 =  np.random.rand(len(mu),1) 
     constrain1 = lambda x : np.sum(x) - 1
     constrain2 = lambda x : np.all(x>=0) and 5 or -5

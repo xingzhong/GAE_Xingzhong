@@ -249,3 +249,29 @@ class PicloudWorkerHandler(webapp2.RequestHandler):
         res = pc.cloud_res(cloudid)
         memcache.set(key='CID%s'%cloudid, value=res)
         
+class HMMHandler(webapp2.RequestHandler):
+    def get(self):
+        template = jinja_environment.get_template('HMM.html')
+        template_values = {
+            'head' : cst.head,
+            'responseDict': cst.responseDict,
+        }
+        self.response.out.write(template.render(template_values))
+        
+class CacheQuoteHandler(webapp2.RequestHandler):
+    def get(self):
+        start = datetime.datetime.now()
+        if start.weekday() in [6,7]:
+            logging.info("Not workday, just return")
+            return None
+        logging.info("Workday, continue")
+        myutils.cache(['aapl', 'goog', 'vxx'])
+
+class TwitterHandler(webapp2.RequestHandler):
+    def get(self):
+        template = jinja_environment.get_template('twitter.html')
+        template_values = {
+            'head' : cst.head,
+        }
+        self.response.out.write(template.render(template_values))        
+        

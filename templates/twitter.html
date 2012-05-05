@@ -1,0 +1,184 @@
+<html>
+<head>
+	{{head}}
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript">
+		google.load('visualization', '1.0', {'packages':['corechart']});
+        var fo1 = new Array();
+        var fo2 = new Array();
+        var user1 = new String();
+        var user2 = new String();
+		var ready1 = 0;
+		var ready2 = 0;
+		var visual_data = {};
+		var trend_deep = 100000;
+        function mutualFn(form){
+            user1 = form.user1.value;
+            user2 = form.user2.value;
+            $.getJSON(
+	'http://api.twitter.com/1/followers/ids.json?screen_name='+user1+'&callback=?',
+                function(data){fo1 = eval(data.ids); ready1 = 1; sync();},
+                'jsonp'
+            );
+            $.getJSON(
+	'http://api.twitter.com/1/followers/ids.json?screen_name='+user2+'&callback=?',
+                function(data){fo2 = eval(data.ids); ready2 = 1; sync();},
+                'jsonp'
+                );
+        }
+		function trendFn(form){
+			key = form.keyword.value;
+			visual_data = {};
+			trend_deep = 10000;
+			$.getJSON(
+	'http://search.twitter.com/search.json?q='+key+'&rpp=100&callback=?',
+                trend,
+                'jsonp'
+            );
+		}
+		function trend(data){
+			var key = data.query;
+			
+			$.each(data.results,  function(index, value){
+				id  =  value.id;
+				var date = value.created_at.substr(5, 14) + 'H';
+				var day  = value.created_at.substr(5, 2);
+				var month = value.created_at.substr(8, 3);
+				var year  = value.created_at.substr(12, 4);
+				var hour = value.created_at.substr(17,2);
+			
+				if(typeof visual_data[date] === "undefined"){
+					visual_data[date] = 1;
+				}
+				else{
+					visual_data[date] ++;
+				}
+			});
+			if(trend_deep%20==0){
+			drawVisualization(key);}
+			trend_deep --;
+			if (trend_deep > 0){
+				$('#trends').html(' Working ... '+data.results.length+'<br>');
+				if (data.results.length < 2){
+					trend_deep=0;
+					$('#trends').html(' Done <br>');
+					drawVisualization(key);
+					}
+				$.getJSON(
+	'http://search.twitter.com/search.json?q='+key+'&rpp=100'+'&max_id='+id+'&callback=?',
+                trend,
+                'jsonp'
+            );
+			}
+		}
+		function sync(){
+			if (ready1+ready2==2){
+				ready1 = 0;
+				ready2 = 0;
+				combine();
+			}
+		}
+        function combine(){
+            var ids = getIntersect(fo1, fo2);
+			var report = user1 + " have #" + fo1.length + "<br>" + user2 + " have #" + fo2.length;
+            report += "<br>Mutual #" + ids.length;
+			document.getElementById("one-column-emphasis").innerHTML = "<thead> <tr> <th> # </th> <th> id </th><th> screen_name </th><th> profile </th><th> location </th></tr></thead><tbody></tbody>";
+            if (ids.length > 100){
+				ids = ids.slice(0,99);
+				report += "<br> Only display first 100 mutual followers";
+			}
+			report += "<hr>";
+			document.getElementById("report").innerHTML = report;
+			$.getJSON(
+     'https://api.twitter.com/1/users/lookup.json?user_id='+ids.toString()+'&callback=?',
+                function(data){
+                    $.each(data, function(index, value){
+                        id = value.id;
+                        name = value.screen_name;
+                        pic = value.profile_image_url;
+						loc = value.location;
+                        var str = '<tr><td>';
+                        str += index;
+                        str += '</td><td>';
+                        str += id;
+                        str += '</td><td>';
+                        str += name;
+                        str += '</td><td>';
+                        str += "<img width='42' height='42' src='"+pic+"'>";
+						str += '</td><td>';
+                        str += loc
+                        str += '</td></tr>';
+                        $('#one-column-emphasis > tbody:last').append(str);
+                    });
+                    },
+                'jsonp');
+        }
+        function getIntersect(arr1, arr2) {
+            var r = [], o = {}, l = arr2.length, i, v;
+            for (i = 0; i < l; i++) {
+                o[arr2[i]] = true;
+            }
+            l = arr1.length;
+            for (i = 0; i < l; i++) {
+                v = arr1[i];
+                if (v in o) {
+                    r.push(v);
+                }
+            }
+            return r;
+        }
+		function drawVisualization(title) {
+		        // Create and populate the data table.
+		  		datarows = new Array();
+				for(var key in visual_data) {
+					datarows.unshift([key, visual_data[key]])
+				}
+				var data = new google.visualization.DataTable();
+				data.addColumn('string', 'date');
+				data.addColumn('number', '# Tweets');
+				data.addRows(datarows);
+		        // Create and draw the visualization.
+		        var options = {
+				        'title': title,
+						vAxis: { logScale : true},
+				};
+				var chart = new google.visualization.ColumnChart(document.getElementById('visualization'));
+				chart.draw(data, options);
+		      }
+		</script>
+</head>
+<body>
+	<div id="title">Twitter Tools</div><hr>
+    <h2> Mutual Friends </h2>
+    <form name="mutual", action="." method="get">
+        <p> username1: <input type="text" name="user1" value="xxingzhong"/>  <br>
+         username2: <input type="text" name="user2" value="FollowStevens"/> </p> <br>
+        <input type="button" onclick="mutualFn(this.form)" value="submit">
+    </form>
+    <div id="report" align="center"></div>
+    <table id="one-column-emphasis" align="center">
+        <thead>
+		<tr>
+            <th> # </th>
+            <th> id </th>
+            <th> screen_name </th>
+            <th> profile </th>
+			<th> location </th>
+        </tr>
+		</thead>
+        <tbody>
+        </tbody>
+    </table>
+	<hr>
+	<h2> Current Trend </h2>
+	<form name="trend", action="." method="get">
+        <p> keywords: <input type="text" name="keyword" value="guangcheng"/> 
+        <input type="button" onclick="trendFn(this.form)" value="search"> </p>
+    </form>
+	<div id="trends" align="center"></div>
+	<div id="debug" align="center"></div>
+	<div id="visualization" style="width: 1200px; height: 400px;"></div>
+	<hr>
+	<div id="footer">Xingzhong 2012</div>
+</body>
+</html>
