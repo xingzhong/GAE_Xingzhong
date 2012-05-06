@@ -1,28 +1,44 @@
-@import url("http://fonts.googleapis.com/css?family=Berkshire+Swash|Averia+Libre:300,400");
+@import url(http://fonts.googleapis.com/css?family=Convergence|Fjord+One);
 
 
-p {margin-left:20px;}
-
-#main { 
-    width: 100%;
-    margin: 0 auto;
-}
-#left    {
-    width: 50%;
-    float: left;
+h1, h2, h3, h4 {
+  font-size: 18px;
+  font-family: 'Convergence', sans-serif;
+  text-transform: uppercase;
 }
 
-#right  {
-    width: 50%;
-    margin-left: 50%;
+a {
+  color: #bf0000;
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+a:active {
+  position: relative;
+  top: 1px;
 }
 
-h1 { font-family: 'Berkshire Swash', cursive; font-weight: 400; font-size:300% }
-h2 { font-family: 'Berkshire Swash', cursive; font-weight: 400; font-size:205% }
-h3 { font-family: 'Berkshire Swash', cursive; font-weight: 400;}
-hr { border: 0; width: 80%; right: 10%;
-	 background-color: #a32638; height: 4px; position:relative}
-p {font-family: 'Averia Libre', cursive; font-weight: 400; font-size: 105%}
+body{
+  font: 16px/1.5 'Fjord One', sans-serif;
+  color: #444;
+  background-color:#eeeeee;
+}
+
+p {
+    font-family: 'Fjord One', serif; 
+    margin-left: 20px;
+}
+
+hr { 
+    border: 0; 
+    width: 80%; 
+    right: 10%;
+    background-color: #a32638; 
+    height: 4px;
+    position:relative;
+}
+
 
 #chart_div {
     width: 900px; 
@@ -30,26 +46,32 @@ p {font-family: 'Averia Libre', cursive; font-weight: 400; font-size: 105%}
 }
 
 #title{
-    font-family: 'Berkshire Swash', cursive; 
-    font-weight: 400; 
-    font-size:400%;
+    font-family: 'Convergence', sans-serif;
+    line-height: 1.35;
+    font-size: 40px; 
     margin:2% 2% 3% 3%;
+}
+
+#title sup{
+    font-size: 15px; 
+    position:relative;
+    top: -10px;
+    left: -12px;
+    color: #666;
 }
 
 #footer{
     background-image: 
-    url(https://developers.tradeking.com/images/logos/PB-TK-small-Blue.jpg),
-    url(https://developers.google.com/appengine/images/appengine_lowres.png),
+    url(https://developers.tradeking.com/images/logos/PB-TK-small-Blue.gif),
+    url(https://developers.google.com/appengine/images/appengine-silver-120x30.gif),
     url(http://docs.scipy.org/doc/_static/scipyshiny_small.png),
     url(http://octodex.github.com/images/original.jpg),
     url(http://www.stevens.edu/press/graphics/apparel-logo/Stevens-Apparel-Color-Preview.jpg);
     background-repeat:no-repeat;
-    background-position:55% 100%, 65% 100%, 70% 100%, 75% 100%, 80% 100%;
+    background-position:42% 100%, 62% 100%, 70% 100%, 75% 100%, 80% 100%;
     height:35px;
     background-size:contain;
-    font-family: 'Berkshire Swash', cursive; 
-    font-weight: 400; 
-    font-size: 170%;
+    font-family: 'Fjord One', serif;
     margin-left:5%
 }
 
