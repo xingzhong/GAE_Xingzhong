@@ -1,7 +1,8 @@
 head = """
 	<link rel="stylesheet" type="text/css" href="../static/main.css" />	
 	<link rel="stylesheet" type="text/css" href="../static/table.css" />
-	<script src="../static/jquery.js"></script>	
+	<script src="../static/jquery.js"></script>
+	<script src="../static/analytics.js"></script>	
 	<script type="text/javascript" src="../static/gdraw.js"></script>
 """
 

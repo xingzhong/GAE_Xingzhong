@@ -1,8 +1,6 @@
 
 
 dict = {
-    'Xingzhong' : 
-        "<a href='http://www.sirxu.com' >Xingzhong</a>",
     "Prof. Hong Man" : 
         "<a href='http://www.ece.stevens-tech.edu/~hman/' >Prof. Hong Man</a>",
     "Stevens Institute of Technology" : 
