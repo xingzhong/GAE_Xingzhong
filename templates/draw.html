@@ -1,30 +1,48 @@
 <html>
 <head>
 {{head}}
+<script type="text/javascript" src="../static/dygraph.js"></script>
 <script type="text/javascript">
-google.load("visualization", "1", {packages:["corechart"]});
-google.setOnLoadCallback(drawChart);
-function drawChart() {
-	
-	var data = new google.visualization.DataTable();
-	data.addColumn('datetime', 'Time');
-	data.addColumn('number', 'Model-VIX');
-	data.addColumn('number', 'Real-VIX');
-	data.addRows([
-		{% for vix in vixs %}
-			[new Date({{vix.marketTime.year}},{{vix.marketTime.month}},{{vix.marketTime.day}},{{vix.marketTime.hour}},{{vix.marketTime.minute}},{{vix.marketTime.second}}), {{vix.quoteModel}}, {{vix.quoteReal}}],
-		{% endfor %}
-		]);
-	var options = { 
-		title: 'VIX'
-	};
-	var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
-	chart.draw(data, options);
-  }
+	function cache(form){
+		$.getJSON("data", {symbol:form.symbol.value, limit:form.duration.value}, function(data){
+			$('#one-column-emphasis > tbody:last').html('');
+			var dytable = 'Date, Quote\n';
+			$.each(data, function(index, value){
+				var tds = '<tr><td>';
+				tds += value[0] + '</td><td>' ;
+				tds += value[1] + '</td>' ;
+				tds += '</tr>'
+				$('#one-column-emphasis > tbody:last').append(tds)
+				dytable += value[0] + ',' + value[1] + '\n';
+			});
+			g = new Dygraph(
+			    document.getElementById("graphdiv"),
+				dytable, 
+				{title:form.symbol.value+' with '+form.duration.value+' samples'});
+		})
+	}
 </script>
 </head>
 <body>
-	<hr>
-	<p> draw {{limit}} samples </p>
-<div id="chart_div"></div>
+	<div id='topbar'><p>Xingzhong 2012</p></div>
+	<div id="title">Xingzhong Space <sup>alpha</sup> </div><hr>
+	<h2> Chart </h2> 
+	<form>
+	<input type="search" name="symbol" value="AAPL"/> <br />
+	<input type="range" name="duration" value="1" min="1" max="300" /> <br />
+	<input type="date" name="date" value="20120512"/>
+	<input type="button" onclick="cache(this.form)" value="draw">
+	</form>
+	<div id="graphdiv"></div>
+	<table id="one-column-emphasis" align="center" name='dtable'>
+        <thead>
+		<tr>
+            <th> time </th>
+            <th> quote </th>
+        </tr>
+		</thead>
+        <tbody>
+        </tbody>
+    </table>
+	<hr> <div id="footer">Xingzhong 2012</div>
 </body>

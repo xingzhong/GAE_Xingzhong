@@ -147,15 +147,9 @@ class DrawHandler(webapp2.RequestHandler):
     def get(self):
         gets = self.request.GET
         limit = gets.get('limit', 10)
-        logging.info(limit)
-        data = vix.all()
-        data.order("-marketTime")
-        vixs = data.fetch(int(limit))
         template = jinja_environment.get_template('draw.html')
         template_values = {
             'head' : cst.head,
-            'vixs' : vixs,
-            'limit': limit,
         }
         self.response.out.write(template.render(template_values))
 
@@ -274,4 +268,17 @@ class TwitterHandler(webapp2.RequestHandler):
             'head' : cst.head,
         }
         self.response.out.write(template.render(template_values))        
+
+class CacheDataHandler(webapp2.RequestHandler):
+    def get(self):
+        gets = self.request.GET
+        symbol = gets.get('symbol', 'AAPL')
+        limit = gets.get('limit', 20)
+        query = intraday.all()
+        query.filter("symbol =", symbol)
+        query.order("-timestamp")
         
+        data = query.fetch(int(limit))
+        
+        djson = [(d.timestamp.isoformat(), d.quote) for d in data]
+        self.response.out.write( json.dumps(djson) )

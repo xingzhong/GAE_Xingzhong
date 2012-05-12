@@ -17,4 +17,5 @@ app = webapp2.WSGIApplication([
     ('/hmm', HMMHandler),
     ('/cache', CacheQuoteHandler),
     ('/twitter', TwitterHandler),
+    ('/data', CacheDataHandler),
     ], debug=True)

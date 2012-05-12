@@ -17,3 +17,4 @@ class intraday(db.Model):
     symbol = db.StringProperty(required=True)
     quote  = db.FloatProperty(required=True)
     
+    
