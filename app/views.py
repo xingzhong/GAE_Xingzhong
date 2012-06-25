@@ -15,6 +15,7 @@ import numpy as np
 import picloud as pc
 import urllib
 import json
+import version as version
 
 class GMT5(datetime.tzinfo):
     def __init__(self):
@@ -45,6 +46,7 @@ class MainHandler(webapp2.RequestHandler):
             'author':'Deployed @ Google App Engine', 
             'time':datetime.datetime.now(GMT5()).strftime("%Y-%b-%d %H:%M:%S"),
             'head' : cst.head,
+            'version': version.get_version(),
             }
         template = jinja_environment.get_template('index.html')
         self.response.out.write(myreplace.replace ( template.render(template_values)))
@@ -99,6 +101,7 @@ class OptionHandler(webapp2.RequestHandler):
             }
         template = jinja_environment.get_template('project.html')
         self.response.out.write(myreplace.replace ( template.render(template_values)))
+
 
 class JobHandler(webapp2.RequestHandler):
     def get(self):
