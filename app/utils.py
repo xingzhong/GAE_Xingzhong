@@ -456,7 +456,9 @@ def status():
     t = tk.TK()
     return t.clock()
 
-
+def account():
+    t = tk.TK()
+    return t.accounts()
 
 if __name__ == '__main__':
     #print vix()

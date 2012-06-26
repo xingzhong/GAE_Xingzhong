@@ -174,6 +174,7 @@ class QuoteHandler(webapp2.RequestHandler):
         self.response.out.write(template.render(template_values))
 
 
+
 class PortfolioHandler(webapp2.RequestHandler):
     def get(self):
         template = jinja_environment.get_template('portfolio.html')
@@ -182,6 +183,7 @@ class PortfolioHandler(webapp2.RequestHandler):
             'responseDict': cst.responseDict,
         }
         self.response.out.write(template.render(template_values))
+
 
 class PortfolioReportHandler(webapp2.RequestHandler):
     def post(self):
@@ -246,12 +248,13 @@ class PicloudWorkerHandler(webapp2.RequestHandler):
         res = pc.cloud_res(cloudid)
         memcache.set(key='CID%s'%cloudid, value=res)
         
-class HMMHandler(webapp2.RequestHandler):
+class KalmanHandler(webapp2.RequestHandler):
     def get(self):
-        template = jinja_environment.get_template('HMM.html')
+        template = jinja_environment.get_template('Kalman.html')
         template_values = {
             'head' : cst.head,
             'responseDict': cst.responseDict,
+            'version': version.get_version(),
         }
         self.response.out.write(template.render(template_values))
         
@@ -285,3 +288,22 @@ class CacheDataHandler(webapp2.RequestHandler):
         
         djson = [(d.timestamp.isoformat(), d.quote) for d in data]
         self.response.out.write( json.dumps(djson) )
+
+class TradeHandler(webapp2.RequestHandler):
+   def get(self):
+       values = db.GqlQuery("select * from accountValue ORDER BY time DESC LIMIT 100")
+       template = jinja_environment.get_template('tradeking.html')
+       template_values = {
+           'head' : cst.head,
+           'responseDict': cst.responseDict,
+           'version': version.get_version(),
+           'values': values
+       }
+       self.response.out.write(template.render(template_values))
+
+class DailyHandler(webapp2.RequestHandler):
+    def get(self):
+        value = myutils.account()['accountbalance']['accountvalue']
+        data = accountValue(value=float(value))
+        data.put()
+        

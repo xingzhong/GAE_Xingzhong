@@ -1,0 +1,46 @@
+<html>
+<head>
+{{head}}
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+<script type="text/javascript">
+	google.load("visualization", "1", {packages:["corechart"]});
+	google.setOnLoadCallback(drawChart);
+	function drawChart() {
+		var data = new google.visualization.DataTable();
+		data.addColumn('datetime', 'Time');
+		data.addColumn('number', 'Value');
+		data.addRows([
+			{% for item in values %}
+				[new Date({{item.time.year}},{{item.time.month}},{{item.time.day}}), {{item.value}}],
+			{% endfor %}
+			]);
+		var options = { 
+			title: 'Account Value ($)',
+			backgroundColor: '#eeeeee',
+		};
+		var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+		chart.draw(data, options);
+      }
+</script>
+</head>
+<div id='topbar'>
+	<p> 
+		<a href="http://blog.sirxu.com">Visit Blog</a>
+		<a href="http://www.sirxu.com">Xingzhong 2012</a>
+		<a href="http://www.sirxu.com">{{version}}</a>
+	</p>
+</div>
+<div id="title">Trade Report</div><hr>
+<div id="chart_div"></div>
+<table>
+{% for item in values %}
+<tr> 
+	<td>  <p>{{item.time}}</p>  </td> 
+	<td>  <p>${{item.value}}</p> </td>
+</tr>
+{% endfor%}
+</table>
+<hr>
+<div id="footer">Xingzhong 2012</div>
+</body>
+</html>

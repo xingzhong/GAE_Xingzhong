@@ -20,6 +20,10 @@ handlers:
   script: main.app
   login: admin
 
+- url: /daily
+  script: main.app
+  login: admin
+
 - url: /picloudjob
   script: main.app
 

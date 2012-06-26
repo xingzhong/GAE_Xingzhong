@@ -16,5 +16,9 @@ class intraday(db.Model):
     timestamp = db.DateTimeProperty(required=True)
     symbol = db.StringProperty(required=True)
     quote  = db.FloatProperty(required=True)
+
+class accountValue(db.Model):
+    time = db.DateTimeProperty(auto_now_add=True)
+    value = db.FloatProperty(required=True)
     
     

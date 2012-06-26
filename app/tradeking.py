@@ -39,7 +39,7 @@ class TK:
     
     def accounts(self):
         key = ['accounts']
-        return self.request(key)
+        return self.request(key)['response']['accounts']['accountsummary']
     
     def status(self):
         key = ['utility', 'status']

@@ -9,3 +9,8 @@ cron:
   url: /cache
   schedule: every 5 minutes from 9:30 to 16:00
   timezone: America/New_York
+
+- description: Daily Job
+  url: /daily
+  schedule: every 24 hours
+  timezone: America/New_York
