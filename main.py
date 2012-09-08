@@ -20,4 +20,5 @@ app = webapp2.WSGIApplication([
     ('/data', CacheDataHandler),
     ('/trade', TradeHandler),
     ('/daily', DailyHandler),
+    ('/stripe', StripeHandler),
     ], debug=True)

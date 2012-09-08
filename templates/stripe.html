@@ -1,0 +1,34 @@
+<html>
+<head>
+{{head}}
+<script type="text/javascript" src="https://js.stripe.com/v1/"></script>
+</head>
+<div id='topbar'>
+	<p> 
+		<a href="http://blog.sirxu.com">Visit Blog</a>
+		<a href="http://www.sirxu.com">Xingzhong 2012</a>
+		<a href="http://www.sirxu.com">{{version}}</a>
+	</p>
+</div>
+<div id="title">Stripe Test on Google App Engine</div><hr>
+{{debug}}
+<form action="" method="POST" id="payment-form">
+  <div class="form-row">
+    <label>Card Number</label>
+    <input type="text" size="20" autocomplete="off" class="card-number"/>
+  </div>
+  <div class="form-row">
+    <label>CVC</label>
+    <input type="text" size="4" autocomplete="off" class="card-cvc"/>
+  </div>
+  <div class="form-row">
+    <label>Expiration (MM/YYYY)</label>
+    <input type="text" size="2" class="card-expiry-month"/>
+    <span> / </span>
+    <input type="text" size="4" class="card-expiry-year"/>
+  </div>
+  <button type="submit" class="submit-button">Submit Payment</button>
+</form>
+<div id="footer">Xingzhong 2012</div>
+</body>
+</html>

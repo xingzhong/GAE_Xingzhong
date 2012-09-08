@@ -16,6 +16,7 @@ import picloud as pc
 import urllib
 import json
 import version as version
+import stripehandler as stripe
 
 class GMT5(datetime.tzinfo):
     def __init__(self):
@@ -306,4 +307,14 @@ class DailyHandler(webapp2.RequestHandler):
         value = myutils.account()['accountbalance']['accountvalue']
         data = accountValue(value=float(value))
         data.put()
-        
+
+class StripeHandler(webapp2.RequestHandler):
+    def get(self):
+        template = jinja_environment.get_template('stripe.html')
+        template_values = {
+            'head' : cst.head,
+            'responseDict': cst.responseDict,
+            'version': version.get_version(),
+            'debug' : stripe.debug(),
+            }
+        self.response.out.write(template.render(template_values))        

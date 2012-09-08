@@ -1,6 +1,6 @@
 #! /usr/bin/env pythonw2.7
 import operator
-from lxml import etree
+#from lxml import etree
 import urllib
 import numpy as np
 from sets import Set
